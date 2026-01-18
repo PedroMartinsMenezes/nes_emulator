@@ -745,6 +745,7 @@ uint8_t CPU6502::BRK() {
     return 0;
 }
 
+//No Operation
 uint8_t CPU6502::NOP() {
     return 0;
 }
