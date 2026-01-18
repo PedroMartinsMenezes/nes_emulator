@@ -376,7 +376,6 @@ uint8_t CPU6502::ABS() {
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     addr_abs = (hi << 8) | lo;
-
     return 0;
 }
 
@@ -385,13 +384,10 @@ uint8_t CPU6502::ABX() {
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     uint16_t base = (hi << 8) | lo;
-
     addr_abs = base + X;
-
     // Page crossed?
     if ((addr_abs & 0xFF00) != (base & 0xFF00))
         return 1;
-
     return 0;
 }
 
@@ -400,12 +396,9 @@ uint8_t CPU6502::ABY() {
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     uint16_t base = (hi << 8) | lo;
-
     addr_abs = base + Y;
-
     if ((addr_abs & 0xFF00) != (base & 0xFF00))
         return 1;
-
     return 0;
 }
 
@@ -414,16 +407,13 @@ uint8_t CPU6502::IND() {
     uint16_t ptr_lo = read(PC++);
     uint16_t ptr_hi = read(PC++);
     uint16_t ptr = (ptr_hi << 8) | ptr_lo;
-
     uint16_t lo = read(ptr);
-
     // Hardware bug emulation
     uint16_t hi;
     if ((ptr & 0x00FF) == 0x00FF)
         hi = read(ptr & 0xFF00);
     else
         hi = read(ptr + 1);
-
     addr_abs = (hi << 8) | lo;
     return 0;
 }
@@ -431,10 +421,8 @@ uint8_t CPU6502::IND() {
 //Indexed Indirect + X
 uint8_t CPU6502::IZX() {
     uint16_t t = (read(PC++) + X) & 0x00FF;
-
     uint16_t lo = read(t & 0x00FF);
     uint16_t hi = read((t + 1) & 0x00FF);
-
     addr_abs = (hi << 8) | lo;
     return 0;
 }
@@ -442,16 +430,12 @@ uint8_t CPU6502::IZX() {
 //Indirect Indexed + Y
 uint8_t CPU6502::IZY() {
     uint16_t t = read(PC++);
-
     uint16_t lo = read(t & 0x00FF);
     uint16_t hi = read((t + 1) & 0x00FF);
-
     uint16_t base = (hi << 8) | lo;
     addr_abs = base + Y;
-
     if ((addr_abs & 0xFF00) != (base & 0xFF00))
         return 1;
-
     return 0;
 }
 
@@ -466,18 +450,92 @@ uint8_t CPU6502::REL() {
 
 #pragma region Opcodes - http://www.6502.org/tutorials/6502opcodes.html
 
-#pragma region Core ALU helpers
+#pragma region Load and Store
+
+//Load Accumulator
+uint8_t CPU6502::LDA() { fetch(); A = fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+
+//Load X Register
+uint8_t CPU6502::LDX() { fetch(); X = fetched; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 1; }
+
+//Load Y Register
+uint8_t CPU6502::LDY() { fetch(); Y = fetched; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 1; }
+
+//Store Accumulator
+uint8_t CPU6502::STA() { write(addr_abs, A); return 0; }
+
+//Store X Register
+uint8_t CPU6502::STX() { write(addr_abs, X); return 0; }
+
+//Store Y Register
+uint8_t CPU6502::STY() { write(addr_abs, Y); return 0; }
+
+#pragma endregion
+
+#pragma region Register Transfers
+
+//Transfer A to X
+uint8_t CPU6502::TAX() { X = A; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
+
+//Transfer A to Y
+uint8_t CPU6502::TAY() { Y = A; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
+
+//Transfer Stack Pointer to X
+uint8_t CPU6502::TSX() { X = SP; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
+
+//Transfer X to A
+uint8_t CPU6502::TXA() { A = X; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
+
+//Transfer X to Stack Pointer
+uint8_t CPU6502::TXS() { SP = X; return 0; }
+
+//Transfer Y to A
+uint8_t CPU6502::TYA() { A = Y; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
+
+#pragma endregion
+
+#pragma region Stack Operations
+
+//Push Accumulator
+uint8_t CPU6502::PHA() { push(A); return 0; }
+
+//Push Processor Status
+uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
+
+//Pull Accumulator
+uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
+
+//Pull Processor Status
+uint8_t CPU6502::PLP() { P = pull(); setFlag(U, true); return 0; }
+
+#pragma endregion
+
+#pragma region Logical Operations
+
+//Bitwise AND with Accumulator
+uint8_t CPU6502::AND() { fetch(); A &= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+
+//Bitwise OR with Accumulator
+uint8_t CPU6502::ORA() { fetch(); A |= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+
+//Bitwise Exclusive OR with Accumulator
+uint8_t CPU6502::EOR() { fetch(); A ^= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+
+//Test Bits
+uint8_t CPU6502::BIT() { fetch(); setFlag(Z, (A & fetched) == 0); setFlag(V, fetched & 0x40); setFlag(N, fetched & 0x80); return 0; }
+
+#pragma endregion
+
+#pragma region Arithmetic Operations
 
 //Add with Carry
 uint8_t CPU6502::ADC() {
     fetch();
     uint16_t sum = (uint16_t)A + (uint16_t)fetched + getFlag(C);
-
     setFlag(C, sum > 0xFF);
     setFlag(Z, (sum & 0xFF) == 0);
     setFlag(V, (~(A ^ fetched) & (A ^ sum)) & 0x80);
     setFlag(N, sum & 0x80);
-
     A = sum & 0xFF;
     return 1;
 }
@@ -499,38 +557,42 @@ uint8_t CPU6502::SBC() {
 
 #pragma endregion
 
-#pragma region Logical and Load/Store
+#pragma region Comparison Operations
 
-//Load Accumulator
-uint8_t CPU6502::LDA() { fetch(); A = fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+//Compare Accumulator
+uint8_t CPU6502::CMP() { fetch(); uint16_t t = A - fetched; setFlag(C, A >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 1; }
 
-//Load X Register
-uint8_t CPU6502::LDX() { fetch(); X = fetched; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 1; }
+//Compare X Register
+uint8_t CPU6502::CPX() { fetch(); uint16_t t = X - fetched; setFlag(C, X >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 0; }
 
-//Load Y Register
-uint8_t CPU6502::LDY() { fetch(); Y = fetched; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 1; }
-
-//Store Accumulator
-uint8_t CPU6502::STA() { write(addr_abs, A); return 0; }
-
-//Store X Register
-uint8_t CPU6502::STX() { write(addr_abs, X); return 0; }
-
-//Store Y Register
-uint8_t CPU6502::STY() { write(addr_abs, Y); return 0; }
-
-//Bitwise AND with Accumulator
-uint8_t CPU6502::AND() { fetch(); A &= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
-
-//Bitwise OR with Accumulator
-uint8_t CPU6502::ORA() { fetch(); A |= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
-
-//Bitwise Exclusive OR with Accumulator
-uint8_t CPU6502::EOR() { fetch(); A ^= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
+//Compare Y Register
+uint8_t CPU6502::CPY() { fetch(); uint16_t t = Y - fetched; setFlag(C, Y >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 0; }
 
 #pragma endregion
 
-#pragma region Shifts
+#pragma region Increments and Decrements
+
+//Increment Memory
+uint8_t CPU6502::INC() { fetch(); uint8_t v = fetched + 1; write(addr_abs, v); setFlag(Z, v == 0); setFlag(N, v & 0x80); return 0; }
+
+//Increment X Register
+uint8_t CPU6502::INX() { X++; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
+
+//Increment Y Register
+uint8_t CPU6502::INY() { Y++; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
+
+//Decrement Memory
+uint8_t CPU6502::DEC() { fetch(); uint8_t v = fetched - 1; write(addr_abs, v); setFlag(Z, v == 0); setFlag(N, v & 0x80); return 0; }
+
+//Decrement X Register
+uint8_t CPU6502::DEX() { X--; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
+
+//Decrement Y Register
+uint8_t CPU6502::DEY() { Y--; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
+
+#pragma endregion
+
+#pragma region Shifts and Rotates
 
 //Arithmetic Shift Left
 uint8_t CPU6502::ASL() {
@@ -568,7 +630,7 @@ uint8_t CPU6502::ROL() {
     return 0;
 }
 
-//
+//Rotate Right
 uint8_t CPU6502::ROR() {
     fetch();
     uint16_t r = (getFlag(C) << 7) | (fetched >> 1);
@@ -582,51 +644,43 @@ uint8_t CPU6502::ROR() {
 
 #pragma endregion
 
-#pragma region Increment and Decrement
+#pragma region Jumps and Calls
 
-//Increment Memory
-uint8_t CPU6502::INC() { fetch(); uint8_t v = fetched + 1; write(addr_abs, v); setFlag(Z, v == 0); setFlag(N, v & 0x80); return 0; }
+//Absolute Jump
+uint8_t CPU6502::JMP() {
+    PC = addr_abs;
+    return 0;
+}
 
-//Increment X Register
-uint8_t CPU6502::INX() { X++; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
+//Jump to Subroutine
+uint8_t CPU6502::JSR() {
+    PC--;
+    push((PC >> 8) & 0xFF);
+    push(PC & 0xFF);
+    PC = addr_abs;
+    return 0;
+}
 
-//Increment Y Register
-uint8_t CPU6502::INY() { Y++; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
+//Return from Subroutine
+uint8_t CPU6502::RTS() {
+    uint16_t lo = pull();
+    uint16_t hi = pull();
+    PC = ((hi << 8) | lo) + 1;
+    return 0;
+}
 
-//Decrement Memory
-uint8_t CPU6502::DEC() { fetch(); uint8_t v = fetched - 1; write(addr_abs, v); setFlag(Z, v == 0); setFlag(N, v & 0x80); return 0; }
-
-//Decrement X Register
-uint8_t CPU6502::DEX() { X--; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
-
-//Decrement Y Register
-uint8_t CPU6502::DEY() { Y--; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
-
-#pragma endregion
-
-#pragma region Compare
-
-//Compare Accumulator
-uint8_t CPU6502::CMP() { fetch(); uint16_t t = A - fetched; setFlag(C, A >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 1; }
-
-//Compare X Register
-uint8_t CPU6502::CPX() { fetch(); uint16_t t = X - fetched; setFlag(C, X >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 0; }
-
-//Compare Y Register
-uint8_t CPU6502::CPY() { fetch(); uint16_t t = Y - fetched; setFlag(C, Y >= fetched); setFlag(Z, (t & 0xFF) == 0); setFlag(N, t & 0x80); return 0; }
+//Return from Interrupt
+uint8_t CPU6502::RTI() {
+    P = pull();
+    uint16_t lo = pull();
+    uint16_t hi = pull();
+    PC = (hi << 8) | lo;
+    return 0;
+}
 
 #pragma endregion
 
 #pragma region Branches
-
-//BPL(Branch on PLus)
-//BMI(Branch on MInus)
-//BVC(Branch on oVerflow Clear)
-//BVS(Branch on oVerflow Set)
-//BCC(Branch on Carry Clear)
-//BCS(Branch on Carry Set)
-//BNE(Branch on Not Equal)
-//BEQ(Branch on EQual)
 
 //Branch on Carry Clear
 uint8_t CPU6502::BCC() { if (!getFlag(C)) branch(); return 0; }
@@ -654,65 +708,7 @@ uint8_t CPU6502::BVS() { if (getFlag(V)) branch(); return 0; }
 
 #pragma endregion
 
-#pragma region Jumps, Stack and Flags
-
-//Absolute Jump
-uint8_t CPU6502::JMP() { 
-    PC = addr_abs; 
-    return 0; 
-}
-
-//Jump to Subroutine
-uint8_t CPU6502::JSR() {
-    PC--;
-    push((PC >> 8) & 0xFF);
-    push(PC & 0xFF);
-    PC = addr_abs;
-    return 0;
-}
-
-//Return from Subroutine
-uint8_t CPU6502::RTS() {
-    uint16_t lo = pull();
-    uint16_t hi = pull();
-    PC = ((hi << 8) | lo) + 1;
-    return 0;
-}
-
-#pragma endregion
-
-#pragma region Stack Instructions
-
-//TXS(Transfer X to Stack ptr)
-//TSX(Transfer Stack ptr to X)
-//PHA(PusH Accumulator)
-//PLA(PuLl Accumulator)
-//PHP(PusH Processor status)
-//PLP(PuLl Processor status)
-
-//Push Accumulator
-uint8_t CPU6502::PHA() { push(A); return 0; }
-
-//Pull Accumulator
-uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
-
-//Push Processor Status
-uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
-
-//Pull Processor Status
-uint8_t CPU6502::PLP() { P = pull(); setFlag(U, true); return 0; }
-
-#pragma endregion
-
-#pragma region Flag Instructions
-
-//CLC(CLear Carry)
-//SEC(SEt Carry)
-//CLI(CLear Interrupt)
-//SEI(SEt Interrupt)
-//CLV(CLear oVerflow)
-//CLD(CLear Decimal)
-//SED(SEt Decimal)
+#pragma region Status Flag Changes
 
 //Clear Carry
 uint8_t CPU6502::CLC() { setFlag(C, false); return 0; }
@@ -726,55 +722,31 @@ uint8_t CPU6502::CLI() { setFlag(I, false); return 0; }
 //Set Interrupt
 uint8_t CPU6502::SEI() { setFlag(I, true); return 0; }
 
-//Clear Overflow
-uint8_t CPU6502::CLV() { setFlag(V, false); return 0; }
-
 //Clear Decimal
 uint8_t CPU6502::CLD() { setFlag(D, false); return 0; }
 
 //Set Decimal
 uint8_t CPU6502::SED() { setFlag(D, true); return 0; }
 
-#pragma endregion
-
-#pragma region Register Transfers
-
-//Transfer A to X
-uint8_t CPU6502::TAX() { X = A; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
-
-//Transfer A to Y
-uint8_t CPU6502::TAY() { Y = A; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0; }
-
-//Transfer Stack Pointer to X
-uint8_t CPU6502::TSX() { X = SP; setFlag(Z, X == 0); setFlag(N, X & 0x80); return 0; }
-
-//Transfer X to A
-uint8_t CPU6502::TXA() { A = X; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
-
-//Transfer X to Stack Pointer
-uint8_t CPU6502::TXS() { SP = X; return 0; }
-
-//Transfer Y to A
-uint8_t CPU6502::TYA() { A = Y; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
+//Clear Overflow
+uint8_t CPU6502::CLV() { setFlag(V, false); return 0; }
 
 #pragma endregion
 
-
-uint8_t CPU6502::NOP() { 
-    return 0; 
-}
-
-//Test Bits
-uint8_t CPU6502::BIT() {
-    return 0;
-}
-
-//Return from Interrupt
-uint8_t CPU6502::RTI() {
-    return 0;
-}
+#pragma region System and Control
 
 //Break
 uint8_t CPU6502::BRK() {
+    PC++;
+    push((PC >> 8) & 0xFF); push(PC & 0xFF);
+    push(P | B | U);
+    setFlag(I, true);
+    PC = read(0xFFFE) | (read(0xFFFF) << 8);
     return 0;
 }
+
+uint8_t CPU6502::NOP() {
+    return 0;
+}
+
+#pragma endregion
