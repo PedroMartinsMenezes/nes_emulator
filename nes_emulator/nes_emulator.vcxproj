@@ -131,6 +131,9 @@
     <ClInclude Include="bus.h" />
     <ClInclude Include="cpu6502.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\roms\nestest.nes" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
