@@ -1,39 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="data">
+      <UniqueIdentifier>{f2491e57-22a3-4f32-8914-0696417e9142}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="cpu">
+      <UniqueIdentifier>{1618c6d3-0baf-434e-98c1-ba3405603989}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="ppu">
+      <UniqueIdentifier>{02492081-f60b-4359-97d3-6dce2de4a0a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="apu">
+      <UniqueIdentifier>{5d545220-d1a5-4821-8ae6-2f3b797b2d16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mapper">
+      <UniqueIdentifier>{a01cdb0c-0411-48f4-98c5-952ef4e9b74b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cartridge">
+      <UniqueIdentifier>{96c7dfad-2dfb-42ae-b477-e5f767d129b9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cpu6502.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>cpu</Filter>
     </ClCompile>
-    <ClCompile Include="bus.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ppu2c02.cpp">
+      <Filter>ppu</Filter>
     </ClCompile>
+    <ClCompile Include="apu2a03.cpp">
+      <Filter>apu</Filter>
+    </ClCompile>
+    <ClCompile Include="mapper4_mmc3.cpp">
+      <Filter>mapper</Filter>
+    </ClCompile>
+    <ClCompile Include="cartridge.cpp">
+      <Filter>cartridge</Filter>
+    </ClCompile>
+    <ClCompile Include="bus.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu6502.h">
-      <Filter>Header Files</Filter>
+      <Filter>cpu</Filter>
     </ClInclude>
-    <ClInclude Include="bus.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ppu2c02.h">
+      <Filter>ppu</Filter>
     </ClInclude>
+    <ClInclude Include="apu2a03.h">
+      <Filter>apu</Filter>
+    </ClInclude>
+    <ClInclude Include="mapper4_mmc3.h">
+      <Filter>mapper</Filter>
+    </ClInclude>
+    <ClInclude Include="cartridge.h">
+      <Filter>cartridge</Filter>
+    </ClInclude>
+    <ClInclude Include="bus.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\roms\nestest.nes" />
+    <None Include="..\roms\nestest.nes">
+      <Filter>data</Filter>
+    </None>
   </ItemGroup>
 </Project>

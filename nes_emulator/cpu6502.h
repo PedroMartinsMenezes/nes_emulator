@@ -3,7 +3,7 @@
 #include <array>
 #include <functional>
 
-struct Bus;
+class Bus;
 
 class CPU6502 {
 public:
@@ -17,6 +17,9 @@ public:
 
     void connectBus(Bus* b) { bus = b; }
     bool complete() const { return cycles == 0; }
+
+    // Test Mode (used for testing)
+    bool nestestMode = false;
 
 private:
     enum FLAGS;
@@ -151,8 +154,7 @@ private: //Inner Variables
     uint8_t  fetched    = 0x00;
     uint16_t addr_abs   = 0x0000;
     uint16_t addr_rel   = 0x0000;
-    uint8_t  opcode     = 0x00;
-    uint8_t  cycles     = 0;
+    uint8_t  opcode     = 0x00;    
 
     // Registers - https://www.nesdev.org/obelisk-6502-guide/registers.html
     uint16_t PC         = 0x0000;   //Program Counter
@@ -161,4 +163,8 @@ private: //Inner Variables
     uint8_t  X          = 0;        //Index Register X
     uint8_t  Y          = 0;        //Index Register Y
     uint8_t  P          = 0x24;     //Processor Status
+
+public:
+    uint8_t  cycles     = 0;
+    
 };

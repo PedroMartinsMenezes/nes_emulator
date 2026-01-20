@@ -1,6 +1,11 @@
 #include <iostream>
 #include <cstdint>
 
+#include "cpu6502.h"
+#include "bus.h"
+
+Bus bus;
+CPU6502 processor;
 
 int main(int argc, char* argv[])
 {
@@ -16,6 +21,12 @@ int main(int argc, char* argv[])
 
     std::cout << "File: " << argv[1] << "\n";
     std::cout << "Checking the emulator with 'nestest.nes' ROM\n";
+
+    bus.nestestMode = true;
+    processor.nestestMode = true;
+
+    processor.reset();
+    processor.connectBus(&bus);
 
     return 0;
 }

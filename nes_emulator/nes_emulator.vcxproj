@@ -123,13 +123,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="apu2a03.cpp" />
+    <ClCompile Include="cartridge.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="bus.cpp" />
     <ClCompile Include="cpu6502.cpp" />
+    <ClCompile Include="mapper4_mmc3.cpp" />
+    <ClCompile Include="ppu2c02.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="apu2a03.h" />
     <ClInclude Include="bus.h" />
+    <ClInclude Include="cartridge.h" />
     <ClInclude Include="cpu6502.h" />
+    <ClInclude Include="mapper4_mmc3.h" />
+    <ClInclude Include="ppu2c02.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\roms\nestest.nes" />
