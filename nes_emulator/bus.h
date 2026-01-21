@@ -17,7 +17,7 @@ public:
 public: //Inner Variables
 
     // Devices
-    CPU6502* CPU = nullptr;     //Central Processing Unit
+    CPU6502* cpu = nullptr;     //Central Processing Unit
     PPU2C02* PPU = nullptr;     //Picture Processing Unit
     Cartridge* cart = nullptr;  //ROM Memory
 

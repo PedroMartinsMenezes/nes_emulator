@@ -5,7 +5,7 @@ APU2A03::APU2A03() {
 
 }
 
-uint8_t APU2A03::cpuRead(uint16_t addr, bool readOnly) {
+uint8_t APU2A03::cpuRead(uint16_t addr, uint8_t data) {
     return 0;
 }
 

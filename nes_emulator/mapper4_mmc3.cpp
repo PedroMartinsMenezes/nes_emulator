@@ -5,7 +5,7 @@ Mapper4_MMC3::Mapper4_MMC3() {
 
 }
 
-uint8_t Mapper4_MMC3::cpuRead(uint16_t addr, bool readOnly) {
+uint8_t Mapper4_MMC3::cpuRead(uint16_t addr, uint8_t data) {
     return 0;
 }
 

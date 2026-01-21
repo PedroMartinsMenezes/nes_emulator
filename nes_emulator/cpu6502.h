@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 #include <array>
 #include <functional>
 
@@ -25,7 +26,7 @@ private:
     enum FLAGS;
 
     //Helpers
-    uint8_t getFlag(FLAGS f);
+    uint8_t getFlag(FLAGS f) const;
     void    setFlag(FLAGS f, bool v);
     uint8_t read(uint16_t addr);
     void    write(uint16_t addr, uint8_t data);
@@ -140,12 +141,23 @@ private: //Inner Types
 
     struct Instruction {
         const char* name;
+        uint8_t bytes = 0;
         uint8_t(CPU6502::* operate)(void) = nullptr;
         uint8_t(CPU6502::* addrmode)(void) = nullptr;
         uint8_t cycles = 0;
     };
 
-private: //Inner Variables
+public:
+
+    std::string flagsToString() const;
+    uint8_t peek(uint16_t addr);
+    void logState(std::ofstream& log);
+    std::string formatOperand(uint16_t pc);
+    inline int ppuCycle() const { return (int)(totalCycles * 3) % 341; }
+    inline int ppuScanline() const { return (int)(totalCycles * 3) / 341; }
+    uint64_t totalCycles = 0;
+
+public: //Inner Variables
 
     std::array<Instruction, 256> lookup;
 
@@ -155,6 +167,7 @@ private: //Inner Variables
     uint16_t addr_abs   = 0x0000;
     uint16_t addr_rel   = 0x0000;
     uint8_t  opcode     = 0x00;    
+    uint8_t  cycles = 0;
 
     // Registers - https://www.nesdev.org/obelisk-6502-guide/registers.html
     uint16_t PC         = 0x0000;   //Program Counter
@@ -163,8 +176,4 @@ private: //Inner Variables
     uint8_t  X          = 0;        //Index Register X
     uint8_t  Y          = 0;        //Index Register Y
     uint8_t  P          = 0x24;     //Processor Status
-
-public:
-    uint8_t  cycles     = 0;
-    
 };

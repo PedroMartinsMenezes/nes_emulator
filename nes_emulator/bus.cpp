@@ -10,6 +10,13 @@ Bus::Bus() {
 uint8_t Bus::cpuRead(uint16_t addr, bool readOnly) {
     uint8_t data = 0x00;
 
+    if (nestestMode) {
+        if (addr < 0x8000) 
+            return ram[addr & 0x07FF];
+        //return 
+        //    prgROM[addr - 0x8000];
+    }
+
     // Cartridge (PRG-ROM / mapper)
     if (cart && cart->cpuRead(addr, data)) {
         return data;

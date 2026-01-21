@@ -19,6 +19,9 @@
     <Filter Include="cartridge">
       <UniqueIdentifier>{96c7dfad-2dfb-42ae-b477-e5f767d129b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bus">
+      <UniqueIdentifier>{c0617343-a92d-46d3-9259-4734fc74467a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu6502.cpp">
@@ -36,8 +39,10 @@
     <ClCompile Include="cartridge.cpp">
       <Filter>cartridge</Filter>
     </ClCompile>
-    <ClCompile Include="bus.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="bus.cpp">
+      <Filter>bus</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu6502.h">
@@ -55,11 +60,18 @@
     <ClInclude Include="cartridge.h">
       <Filter>cartridge</Filter>
     </ClInclude>
-    <ClInclude Include="bus.h" />
+    <ClInclude Include="bus.h">
+      <Filter>bus</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\roms\nestest.nes">
       <Filter>data</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\roms\nestest.log">
+      <Filter>data</Filter>
+    </Text>
   </ItemGroup>
 </Project>

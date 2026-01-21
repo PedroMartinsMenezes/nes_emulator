@@ -1,12 +1,20 @@
 #pragma once
 #include <cstdint>
-
+#include <vector>
+#include <string>
 
 class Cartridge {
 public:
-    Cartridge();
+    Cartridge(const std::string& romPath);
 
-    uint8_t cpuRead(uint16_t addr, bool readOnly = false);
+    bool cpuRead(uint16_t addr, uint8_t& data);
 
-    void    cpuWrite(uint16_t addr, uint8_t data);
+    bool cpuWrite(uint16_t addr, uint8_t data);
+
+private:
+    // PRG ROM
+    std::vector<uint8_t> prgROM;
+
+    // For now: NROM only (mapper 0)
+    uint8_t prgBanks = 0;
 };
