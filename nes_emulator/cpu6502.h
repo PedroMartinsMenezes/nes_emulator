@@ -36,6 +36,7 @@ private:
     //Stack
     void push(uint8_t v);
     uint8_t pull();
+    uint8_t pullProcessorStatus();
 
     // Addressing modes - https://www.nesdev.org/obelisk-6502-guide/addressing.html
     uint8_t IMP(); uint8_t IMM();
@@ -44,7 +45,7 @@ private:
     uint8_t IND(); uint8_t IZX(); uint8_t IZY();
     uint8_t REL();
 
-    // Instruction Set - https://www.nesdev.org/obelisk-6502-guide/instructions.html
+    // Instruction Set - https://www.nesdev.org/wiki/Instruction_reference
     
     // Load and Store
     uint8_t LDA();
@@ -129,14 +130,14 @@ private:
 private: //Inner Types
 
     enum FLAGS {
-        C = (1 << 0),   // Carry Flag
-        Z = (1 << 1),   // Zero Flag
-        I = (1 << 2),   // Interrupt Disable
-        D = (1 << 3),   // Decimal Mode
-        B = (1 << 4),   // Break Command
-        U = (1 << 5),
-        V = (1 << 6),   // Overflow Flag
-        N = (1 << 7),   // Negative Flag
+        C = 0x01,   // Carry Flag
+        Z = 0x02,   // Zero Flag
+        I = 0x04,   // Interrupt Disable
+        D = 0x08,   // Decimal Mode
+        B = 0x10,   // Break Command
+        U = 0x20,   // Always set to 1 when pushed; no CPU effect
+        V = 0x40,   // Overflow Flag
+        N = 0x80,   // Negative Flag
     };
 
     struct Instruction {

@@ -2,6 +2,7 @@
 #include "bus.h"
 #include <fstream>
 #include <cstdio>
+#include <sstream>
 
 
 #pragma region Constructor
@@ -230,8 +231,10 @@ uint8_t CPU6502::getFlag(FLAGS f) const {
 }
 
 void CPU6502::setFlag(FLAGS f, bool v) {
-    if (v) P |= f;
-    else   P &= ~f;
+    if (v) 
+        P |= f;
+    else   
+        P &= ~f;
 }
 
 uint8_t CPU6502::read(uint16_t addr) {
@@ -338,6 +341,24 @@ void CPU6502::push(uint8_t v) {
 
 uint8_t CPU6502::pull() {
     return read(0x0100 + ++SP);
+}
+
+uint8_t CPU6502::pullProcessorStatus() {
+    //https://www.nesdev.org/wiki/Instruction_reference#PLP
+    //The B flag and extra bit are ignored
+
+    uint8_t currentB = P & B ? B : 0;
+    uint8_t currentU = P & U ? U : 0;
+
+    P = pull();
+
+    P &= ~B;
+    P |= currentB;
+
+    P &= ~U;
+    P |= currentU;
+
+    return P;
 }
 
 #pragma endregion
@@ -452,7 +473,7 @@ uint8_t CPU6502::REL() {
 
 #pragma endregion
 
-#pragma region Instruction Set - https://www.nesdev.org/obelisk-6502-guide/instructions.html
+#pragma region Instruction Set - https://www.nesdev.org/wiki/Instruction_reference
 
 #pragma region Load and Store
 
@@ -510,7 +531,7 @@ uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
 uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
 
 //Pull Processor Status
-uint8_t CPU6502::PLP() { P = pull(); setFlag(U, true); return 0; }
+uint8_t CPU6502::PLP() { P = pullProcessorStatus(); return 0; }
 
 #pragma endregion
 
@@ -776,11 +797,13 @@ void CPU6502::logState(std::ofstream& log) {
 
     uint8_t op = peek(pc);
     
-    uint8_t b1 = peek(pc + 1);
-    std::string byte1 = lookup[op].bytes > 1 ? std::to_string(b1) : "  ";
+    char byte1[3] = "  ";
+    if (lookup[op].bytes > 1 || lookup[op].addrmode == &CPU6502::REL)
+        std::sprintf(byte1, "%X", peek(pc + 1));
 
-    uint8_t b2 = peek(pc + 2);
-    std::string byte2 = lookup[op].bytes > 2 ? std::to_string(b2) : "  ";
+    char byte2[3] = "  ";
+    if (lookup[op].bytes > 2)
+        std::sprintf(byte2, "%X", peek(pc + 2));
 
     std::string operand = formatOperand(pc);
 
@@ -796,7 +819,9 @@ void CPU6502::logState(std::ofstream& log) {
         buffer, sizeof(buffer),
         "%04X  %02X %02s %02s  %-3s %-27s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%llu",
         pc,
-        op, byte1.c_str(), byte2.c_str(),
+        op, 
+        byte1,
+        byte2,
         lookup[op].name,
         operand.c_str(),
         A, X, Y, P, SP,

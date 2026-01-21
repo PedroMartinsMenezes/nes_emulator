@@ -55,8 +55,7 @@ uint8_t Bus::cpuRead(uint16_t addr, bool readOnly) {
 void Bus::cpuWrite(uint16_t addr, uint8_t data) {
 
     // Cartridge (mapper writes)
-    if (cart) {
-        cart->cpuWrite(addr, data);
+    if (cart && cart->cpuWrite(addr, data)) {
         return;
     }
 
