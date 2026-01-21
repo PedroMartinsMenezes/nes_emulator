@@ -219,7 +219,6 @@ CPU6502::CPU6502() {
     lookup[0x8A] = { "TXA",1,&CPU6502::TXA,&CPU6502::IMP,2 };
     lookup[0x9A] = { "TXS",1,&CPU6502::TXS,&CPU6502::IMP,2 };
     lookup[0x98] = { "TYA",1,&CPU6502::TYA,&CPU6502::IMP,2 };
-
 }
 
 #pragma endregion
@@ -792,6 +791,7 @@ uint8_t CPU6502::peek(uint16_t addr) {
     return bus->cpuRead(addr, true);
 }
 
+#pragma region Logging
 void CPU6502::logState(std::ofstream& log) {
     uint16_t pc = PC;
 
@@ -884,5 +884,59 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         buf[0] = '\0'; // IMP
     }
 
+    if (isMemoryOpcode(op)) {
+        uint16_t ea = computeEffectiveAddressForLog(pc);
+        uint8_t value = bus->cpuRead(ea, true);
+        char tmp[8];
+        snprintf(tmp, sizeof(tmp), " = %02X", value);
+        return std::string(buf) + tmp;
+    }
+
     return std::string(buf);
 }
+
+bool CPU6502::isMemoryOpcode(uint8_t op) const {
+    if (lookup[op].addrmode == &CPU6502::IMM)
+        return false;
+    
+    return 
+        lookup[op].operate == &CPU6502::BIT ||
+        lookup[op].operate == &CPU6502::STA ||
+        lookup[op].operate == &CPU6502::STX ||
+        lookup[op].operate == &CPU6502::STY ||
+        lookup[op].operate == &CPU6502::LDA ||
+        lookup[op].operate == &CPU6502::LDX ||
+        lookup[op].operate == &CPU6502::LDY;
+}
+
+uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
+    uint8_t op = peek(pc);
+    uint8_t b1 = peek(pc + 1);
+    uint8_t b2 = peek(pc + 2);
+
+    auto mode = lookup[op].addrmode;
+
+    if (mode == &CPU6502::ZP0) return b1;
+    if (mode == &CPU6502::ZPX) return (b1 + X) & 0xFF;
+    if (mode == &CPU6502::ZPY) return (b1 + Y) & 0xFF;
+    if (mode == &CPU6502::ABS) return (b2 << 8) | b1;
+    if (mode == &CPU6502::ABX) return ((b2 << 8) | b1) + X;
+    if (mode == &CPU6502::ABY) return ((b2 << 8) | b1) + Y;
+
+    if (mode == &CPU6502::IZX) {
+        uint8_t t = (b1 + X) & 0xFF;
+        uint8_t lo = bus->cpuRead(t, true);
+        uint8_t hi = bus->cpuRead((t + 1) & 0xFF, true);
+        return (hi << 8) | lo;
+    }
+
+    if (mode == &CPU6502::IZY) {
+        uint8_t lo = bus->cpuRead(b1, true);
+        uint8_t hi = bus->cpuRead((b1 + 1) & 0xFF, true);
+        return ((hi << 8) | lo) + Y;
+    }
+
+    return 0;
+}
+
+#pragma endregion
