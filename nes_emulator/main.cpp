@@ -72,6 +72,9 @@ int main(int argc, char** argv) {
         if (runNestest && cpu.PC == 0xC66E) {
             running = false;
         }
+
+        if (cpu.totalCycles > 100000) //@@@ remove this
+            break;
     }
 
     // Cleanup

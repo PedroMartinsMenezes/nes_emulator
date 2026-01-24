@@ -342,24 +342,6 @@ uint8_t CPU6502::pull() {
     return read(0x0100 + ++SP);
 }
 
-uint8_t CPU6502::pullProcessorStatus() {
-    //https://www.nesdev.org/wiki/Instruction_reference#PLP
-    //The B flag and extra bit are ignored
-
-    uint8_t currentB = P & B ? B : 0;
-    uint8_t currentU = P & U ? U : 0;
-
-    P = pull();
-
-    P &= ~B;
-    P |= currentB;
-
-    P &= ~U;
-    P |= currentU;
-
-    return P;
-}
-
 #pragma endregion
 
 #pragma region Addressing Modes - https://www.nesdev.org/obelisk-6502-guide/addressing.html
@@ -530,7 +512,12 @@ uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
 uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
 
 //Pull Processor Status
-uint8_t CPU6502::PLP() { P = pullProcessorStatus(); return 0; }
+uint8_t CPU6502::PLP() { 
+    P = pull();
+    setFlag(B, false);
+    setFlag(U, true);
+    return 0;
+}
 
 #pragma endregion
 
@@ -766,9 +753,15 @@ uint8_t CPU6502::NOP() {
 //Return from Interrupt
 uint8_t CPU6502::RTI() {
     P = pull();
+
+    // NES / 6502 rules
+    setFlag(B, false);
+    setFlag(U, true);
+
     uint16_t lo = pull();
     uint16_t hi = pull();
     PC = (hi << 8) | lo;
+
     return 0;
 }
 
@@ -890,6 +883,18 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         char tmp[8];
         snprintf(tmp, sizeof(tmp), " = %02X", value);
         return std::string(buf) + tmp;
+    }
+
+    // Accumulator addressing (nestest formatting)
+    if (lookup[op].addrmode == &CPU6502::IMP) {
+        auto fn = lookup[op].operate;
+
+        if (fn == &CPU6502::LSR ||
+            fn == &CPU6502::ASL ||
+            fn == &CPU6502::ROL ||
+            fn == &CPU6502::ROR) {
+            return "A";
+        }
     }
 
     return std::string(buf);

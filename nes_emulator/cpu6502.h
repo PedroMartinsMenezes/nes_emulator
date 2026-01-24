@@ -36,7 +36,6 @@ private:
     //Stack
     void push(uint8_t v);
     uint8_t pull();
-    uint8_t pullProcessorStatus();
 
     // Addressing modes - https://www.nesdev.org/obelisk-6502-guide/addressing.html
     uint8_t IMP(); uint8_t IMM();
