@@ -281,14 +281,15 @@ CPU6502::CPU6502() {
     lookup[0xDB] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABY,7 };
     lookup[0xDF] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABX,7 };
 
-    // Illegal ISC
-    lookup[0xE3] = { "*ISC",2,&CPU6502::ISC,&CPU6502::IZX,8 };
-    lookup[0xE7] = { "*ISC",2,&CPU6502::ISC,&CPU6502::ZP0,5 };
-    lookup[0xEF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABS,6 };
-    lookup[0xF3] = { "*ISC",2,&CPU6502::ISC,&CPU6502::IZY,8 };
-    lookup[0xF7] = { "*ISC",2,&CPU6502::ISC,&CPU6502::ZPX,6 };
-    lookup[0xFB] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABY,7 };
-    lookup[0xFF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABX,7 };
+    // Illegal ISB
+    lookup[0xE3] = { "*ISB",2,&CPU6502::ISC,&CPU6502::IZX,8 };
+    lookup[0xE7] = { "*ISB",2,&CPU6502::ISC,&CPU6502::ZP0,5 };
+    lookup[0xEF] = { "*ISB",3,&CPU6502::ISC,&CPU6502::ABS,6 };
+    lookup[0xF3] = { "*ISB",2,&CPU6502::ISC,&CPU6502::IZY,8 };
+    lookup[0xF7] = { "*ISB",2,&CPU6502::ISC,&CPU6502::ZPX,6 };
+    lookup[0xFB] = { "*ISB",3,&CPU6502::ISC,&CPU6502::ABY,7 };
+    lookup[0xFF] = { "*ISB",3,&CPU6502::ISC,&CPU6502::ABX,7 };
+
 
     // Illegal SLO
     lookup[0x03] = { "*SLO",2,&CPU6502::SLO,&CPU6502::IZX,8 };
