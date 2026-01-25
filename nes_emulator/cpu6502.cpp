@@ -916,14 +916,23 @@ bool CPU6502::isMemoryOpcode(uint8_t op) const {
     if (lookup[op].addrmode == &CPU6502::IMM)
         return false;
     
-    return 
-        lookup[op].operate == &CPU6502::BIT ||
-        lookup[op].operate == &CPU6502::STA ||
-        lookup[op].operate == &CPU6502::STX ||
-        lookup[op].operate == &CPU6502::STY ||
-        lookup[op].operate == &CPU6502::LDA ||
-        lookup[op].operate == &CPU6502::LDX ||
-        lookup[op].operate == &CPU6502::LDY;
+    auto fn = lookup[op].operate;
+    return
+        fn == &CPU6502::BIT ||
+        fn == &CPU6502::STA ||
+        fn == &CPU6502::STX ||
+        fn == &CPU6502::STY ||
+        fn == &CPU6502::LDA ||
+        fn == &CPU6502::LDX ||
+        fn == &CPU6502::LDY ||
+        fn == &CPU6502::ORA ||
+        fn == &CPU6502::AND ||
+        fn == &CPU6502::EOR ||
+        fn == &CPU6502::ADC ||
+        fn == &CPU6502::SBC ||
+        fn == &CPU6502::CMP ||
+        fn == &CPU6502::CPX ||
+        fn == &CPU6502::CPY;
 }
 
 uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
