@@ -34,7 +34,7 @@ uint8_t Bus::cpuRead(uint16_t addr, bool readOnly) {
         if (nestestMode)
             return 0x00;
 
-        return PPU->cpuRead(addr & 0x0007, readOnly);
+        return ppu->cpuRead(addr & 0x0007, readOnly);
     }
 
     // APU + IO ($4000–$4017)
@@ -72,7 +72,7 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
         if (nestestMode)
             return;
 
-        PPU->cpuWrite(addr & 0x0007, data);
+        ppu->cpuWrite(addr & 0x0007, data);
         return;
     }
 
