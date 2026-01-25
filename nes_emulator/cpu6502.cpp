@@ -842,14 +842,14 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         uint8_t base = b1;
         uint8_t ea = (base + X) & 0xFF;
         uint8_t val = bus->cpuRead(ea, true);
-        snprintf(buf, sizeof(buf), "$%02X,X @ %02X = %02X", base, base, val);
+        snprintf(buf, sizeof(buf), "$%02X,X @ %02X = %02X", base, ea, val);
         return std::string(buf);
     }
     else if (mode == &CPU6502::ZPY) {
         uint8_t base = b1;
         uint8_t ea = (base + Y) & 0xFF;
         uint8_t val = bus->cpuRead(ea, true);
-        snprintf(buf, sizeof(buf), "$%02X,Y @ %02X = %02X", base, base, val);
+        snprintf(buf, sizeof(buf), "$%02X,Y @ %02X = %02X", base, ea, val);
         return std::string(buf);
     }
     else if (mode == &CPU6502::ABS) {
