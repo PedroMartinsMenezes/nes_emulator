@@ -851,15 +851,18 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "$%04X", addr);
     }
     else if (mode == &CPU6502::ABX) {
-        uint16_t addr = (b2 << 8) | b1;
-        snprintf(buf, sizeof(buf), "$%04X,X", addr);
+        uint16_t base = (b2 << 8) | b1;
+        uint16_t ea = (base + X) & 0xFFFF;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "$%04X,X @ %04X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ABY) {
         uint16_t base = (b2 << 8) | b1;
-        uint16_t ea = base + Y;
+        uint16_t ea = (base + Y) & 0xFFFF;
         uint8_t val = bus->cpuRead(ea, true);
-        snprintf(buf, sizeof(buf), "$%04X,Y @ %04X = %02X", base, base, val);
-        return std::string(buf);  // IMPORTANT: prevent suffix duplication
+        snprintf(buf, sizeof(buf), "$%04X,Y @ %04X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::IND) {
         uint16_t ptr = (b2 << 8) | b1;
