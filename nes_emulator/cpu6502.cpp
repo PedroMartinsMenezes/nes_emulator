@@ -223,6 +223,17 @@ CPU6502::CPU6502() {
 
     #pragma region Illegal NOP entries
 
+    //Illegal immediate NOP
+    lookup[0x80] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::IMM, 2 };
+
+    //Illegal implied NOPs
+    lookup[0x1A] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+    lookup[0x3A] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+    lookup[0x5A] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+    lookup[0x7A] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+    lookup[0xDA] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+    lookup[0xFA] = { "*NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
+
     //Zero-page illegal NOPs (DOP)
     lookup[0x04] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZP0, 3 };
     lookup[0x44] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZP0, 3 };
@@ -951,7 +962,7 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         }
     }
 
-    if (isMemoryOpcode(op) && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
+    if (isMemoryOpcode(op) && mode != &CPU6502::IMP && mode != &CPU6502::IMM && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
         uint16_t ea = computeEffectiveAddressForLog(pc);
         uint8_t value = bus->cpuRead(ea, true);
         char tmp[8];
