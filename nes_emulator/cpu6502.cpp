@@ -266,6 +266,77 @@ CPU6502::CPU6502() {
     lookup[0xB7] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::ZPY, 4 };
     lookup[0xBF] = { "*LAX", 3, &CPU6502::LAX, &CPU6502::ABY, 4 };
 
+    //========================================================
+
+    // ---------- LAX ----------
+    lookup[0xA3] = { "*LAX",2,&CPU6502::LAX,&CPU6502::IZX,6 };
+    lookup[0xA7] = { "*LAX",2,&CPU6502::LAX,&CPU6502::ZP0,3 };
+    lookup[0xAF] = { "*LAX",3,&CPU6502::LAX,&CPU6502::ABS,4 };
+    lookup[0xB3] = { "*LAX",2,&CPU6502::LAX,&CPU6502::IZY,5 };
+    lookup[0xB7] = { "*LAX",2,&CPU6502::LAX,&CPU6502::ZPY,4 };
+    lookup[0xBF] = { "*LAX",3,&CPU6502::LAX,&CPU6502::ABY,4 };
+
+    // ---------- SAX ----------
+    lookup[0x83] = { "*SAX",2,&CPU6502::SAX,&CPU6502::IZX,6 };
+    lookup[0x87] = { "*SAX",2,&CPU6502::SAX,&CPU6502::ZP0,3 };
+    lookup[0x8F] = { "*SAX",3,&CPU6502::SAX,&CPU6502::ABS,4 };
+    lookup[0x97] = { "*SAX",2,&CPU6502::SAX,&CPU6502::ZPY,4 };
+
+    // ---------- DCP ----------
+    lookup[0xC3] = { "*DCP",2,&CPU6502::DCP,&CPU6502::IZX,8 };
+    lookup[0xC7] = { "*DCP",2,&CPU6502::DCP,&CPU6502::ZP0,5 };
+    lookup[0xCF] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABS,6 };
+    lookup[0xD3] = { "*DCP",2,&CPU6502::DCP,&CPU6502::IZY,8 };
+    lookup[0xD7] = { "*DCP",2,&CPU6502::DCP,&CPU6502::ZPX,6 };
+    lookup[0xDB] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABY,7 };
+    lookup[0xDF] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABX,7 };
+
+    // ---------- ISC ----------
+    lookup[0xE3] = { "*ISC",2,&CPU6502::ISC,&CPU6502::IZX,8 };
+    lookup[0xE7] = { "*ISC",2,&CPU6502::ISC,&CPU6502::ZP0,5 };
+    lookup[0xEF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABS,6 };
+    lookup[0xF3] = { "*ISC",2,&CPU6502::ISC,&CPU6502::IZY,8 };
+    lookup[0xF7] = { "*ISC",2,&CPU6502::ISC,&CPU6502::ZPX,6 };
+    lookup[0xFB] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABY,7 };
+    lookup[0xFF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABX,7 };
+
+    // ---------- SLO ----------
+    lookup[0x03] = { "*SLO",2,&CPU6502::SLO,&CPU6502::IZX,8 };
+    lookup[0x07] = { "*SLO",2,&CPU6502::SLO,&CPU6502::ZP0,5 };
+    lookup[0x0F] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABS,6 };
+    lookup[0x13] = { "*SLO",2,&CPU6502::SLO,&CPU6502::IZY,8 };
+    lookup[0x17] = { "*SLO",2,&CPU6502::SLO,&CPU6502::ZPX,6 };
+    lookup[0x1B] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABY,7 };
+    lookup[0x1F] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABX,7 };
+
+    // ---------- RLA ----------
+    lookup[0x23] = { "*RLA",2,&CPU6502::RLA,&CPU6502::IZX,8 };
+    lookup[0x27] = { "*RLA",2,&CPU6502::RLA,&CPU6502::ZP0,5 };
+    lookup[0x2F] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABS,6 };
+    lookup[0x33] = { "*RLA",2,&CPU6502::RLA,&CPU6502::IZY,8 };
+    lookup[0x37] = { "*RLA",2,&CPU6502::RLA,&CPU6502::ZPX,6 };
+    lookup[0x3B] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABY,7 };
+    lookup[0x3F] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABX,7 };
+
+    // ---------- SRE ----------
+    lookup[0x43] = { "*SRE",2,&CPU6502::SRE,&CPU6502::IZX,8 };
+    lookup[0x47] = { "*SRE",2,&CPU6502::SRE,&CPU6502::ZP0,5 };
+    lookup[0x4F] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABS,6 };
+    lookup[0x53] = { "*SRE",2,&CPU6502::SRE,&CPU6502::IZY,8 };
+    lookup[0x57] = { "*SRE",2,&CPU6502::SRE,&CPU6502::ZPX,6 };
+    lookup[0x5B] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABY,7 };
+    lookup[0x5F] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABX,7 };
+
+    // ---------- RRA ----------
+    lookup[0x63] = { "*RRA",2,&CPU6502::RRA,&CPU6502::IZX,8 };
+    lookup[0x67] = { "*RRA",2,&CPU6502::RRA,&CPU6502::ZP0,5 };
+    lookup[0x6F] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABS,6 };
+    lookup[0x73] = { "*RRA",2,&CPU6502::RRA,&CPU6502::IZY,8 };
+    lookup[0x77] = { "*RRA",2,&CPU6502::RRA,&CPU6502::ZPX,6 };
+    lookup[0x7B] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABY,7 };
+    lookup[0x7F] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABX,7 };
+
+
 
     #pragma endregion
 }
@@ -829,6 +900,82 @@ uint8_t CPU6502::LAX() {
     setFlag(Z, A == 0);
     setFlag(N, A & 0x80);
     return 1;
+}
+
+uint8_t CPU6502::SAX() {
+    write(addr_abs, A & X);
+    return 0;
+}
+
+uint8_t CPU6502::DCP() {
+    fetch();
+    uint8_t v = fetched - 1;
+    write(addr_abs, v);
+    uint16_t t = A - v;
+    setFlag(C, A >= v);
+    setFlag(Z, (t & 0xFF) == 0);
+    setFlag(N, t & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::ISC() {
+    fetch();
+    uint8_t v = fetched + 1;
+    write(addr_abs, v);
+    uint16_t sum = (uint16_t)A + (v ^ 0xFF) + getFlag(C);
+    setFlag(C, sum & 0xFF00);
+    setFlag(Z, (sum & 0xFF) == 0);
+    setFlag(V, (sum ^ A) & (sum ^ (v ^ 0xFF)) & 0x80);
+    setFlag(N, sum & 0x80);
+    A = sum & 0xFF;
+    return 0;
+}
+
+uint8_t CPU6502::SLO() {
+    fetch();
+    uint16_t r = fetched << 1;
+    write(addr_abs, r & 0xFF);
+    setFlag(C, r & 0xFF00);
+    A |= (r & 0xFF);
+    setFlag(Z, A == 0);
+    setFlag(N, A & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::RLA() {
+    fetch();
+    uint16_t r = (fetched << 1) | getFlag(C);
+    write(addr_abs, r & 0xFF);
+    setFlag(C, r & 0xFF00);
+    A &= (r & 0xFF);
+    setFlag(Z, A == 0);
+    setFlag(N, A & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::SRE() {
+    fetch();
+    setFlag(C, fetched & 1);
+    uint8_t r = fetched >> 1;
+    write(addr_abs, r);
+    A ^= r;
+    setFlag(Z, A == 0);
+    setFlag(N, A & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::RRA() {
+    fetch();
+    uint16_t r = (getFlag(C) << 7) | (fetched >> 1);
+    write(addr_abs, r & 0xFF);
+    setFlag(C, fetched & 1);
+    uint16_t sum = (uint16_t)A + (r & 0xFF) + getFlag(C);
+    setFlag(C, sum & 0xFF00);
+    setFlag(Z, (sum & 0xFF) == 0);
+    setFlag(V, (~(A ^ r) & (A ^ sum)) & 0x80);
+    setFlag(N, sum & 0x80);
+    A = sum & 0xFF;
+    return 0;
 }
 
 #pragma endregion

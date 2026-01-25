@@ -129,6 +129,13 @@ private:
     //Illegal Instructions
     uint8_t NOP1();
     uint8_t LAX();
+    uint8_t SAX();
+    uint8_t DCP();
+    uint8_t ISC();
+    uint8_t SLO();
+    uint8_t RLA();
+    uint8_t SRE();
+    uint8_t RRA();
 
 private: //Inner Types
 
