@@ -855,8 +855,11 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "$%04X,X", addr);
     }
     else if (mode == &CPU6502::ABY) {
-        uint16_t addr = (b2 << 8) | b1;
-        snprintf(buf, sizeof(buf), "$%04X,Y", addr);
+        uint16_t base = (b2 << 8) | b1;
+        uint16_t ea = base + Y;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "$%04X,Y @ %04X = %02X", base, base, val);
+        return std::string(buf);  // IMPORTANT: prevent suffix duplication
     }
     else if (mode == &CPU6502::IND) {
         uint16_t ptr = (b2 << 8) | b1;
