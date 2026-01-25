@@ -290,7 +290,6 @@ CPU6502::CPU6502() {
     lookup[0xFB] = { "*ISB",3,&CPU6502::ISC,&CPU6502::ABY,7 };
     lookup[0xFF] = { "*ISB",3,&CPU6502::ISC,&CPU6502::ABX,7 };
 
-
     // Illegal SLO
     lookup[0x03] = { "*SLO",2,&CPU6502::SLO,&CPU6502::IZX,8 };
     lookup[0x07] = { "*SLO",2,&CPU6502::SLO,&CPU6502::ZP0,5 };

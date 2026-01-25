@@ -63,18 +63,15 @@ int main(int argc, char** argv) {
 
     while (running) {
 
+        if (runNestest && cpu.PC == 0xC66E && cpu.complete()) {
+            running = false;
+        }
+
         if (runNestest && cpu.complete()) {
             cpu.logState(log);
         }
 
         cpu.clock();
-
-        if (runNestest && cpu.PC == 0xC66E) {
-            running = false;
-        }
-
-        if (cpu.totalCycles > 100000) //@@@ remove this
-            break;
     }
 
     // Cleanup
