@@ -915,8 +915,9 @@ std::string CPU6502::formatOperand(uint16_t pc) {
 bool CPU6502::isMemoryOpcode(uint8_t op) const {
     if (lookup[op].addrmode == &CPU6502::IMM)
         return false;
-    
+
     auto fn = lookup[op].operate;
+
     return
         fn == &CPU6502::BIT ||
         fn == &CPU6502::STA ||
@@ -932,7 +933,15 @@ bool CPU6502::isMemoryOpcode(uint8_t op) const {
         fn == &CPU6502::SBC ||
         fn == &CPU6502::CMP ||
         fn == &CPU6502::CPX ||
-        fn == &CPU6502::CPY;
+        fn == &CPU6502::CPY ||
+
+        // ---- Read-modify-write ----
+        fn == &CPU6502::INC ||
+        fn == &CPU6502::DEC ||
+        fn == &CPU6502::ASL ||
+        fn == &CPU6502::LSR ||
+        fn == &CPU6502::ROL ||
+        fn == &CPU6502::ROR;
 }
 
 uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
