@@ -829,9 +829,7 @@ std::string CPU6502::formatOperand(uint16_t pc) {
     uint8_t op = peek(pc);
     uint8_t b1 = peek(pc + 1);
     uint8_t b2 = peek(pc + 2);
-
     char buf[32]{};
-
     auto mode = lookup[op].addrmode;
 
     if (mode == &CPU6502::IMM) {
@@ -841,10 +839,18 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "$%02X", b1);
     }
     else if (mode == &CPU6502::ZPX) {
-        snprintf(buf, sizeof(buf), "$%02X,X", b1);
+        uint8_t base = b1;
+        uint8_t ea = (base + X) & 0xFF;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "$%02X,X @ %02X = %02X", base, base, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ZPY) {
-        snprintf(buf, sizeof(buf), "$%02X,Y", b1);
+        uint8_t base = b1;
+        uint8_t ea = (base + Y) & 0xFF;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "$%02X,Y @ %02X = %02X", base, base, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ABS) {
         uint16_t addr = (b2 << 8) | b1;
@@ -906,11 +912,7 @@ std::string CPU6502::formatOperand(uint16_t pc) {
     // Accumulator addressing (nestest formatting)
     if (lookup[op].addrmode == &CPU6502::IMP) {
         auto fn = lookup[op].operate;
-
-        if (fn == &CPU6502::LSR ||
-            fn == &CPU6502::ASL ||
-            fn == &CPU6502::ROL ||
-            fn == &CPU6502::ROR) {
+        if (fn == &CPU6502::LSR || fn == &CPU6502::ASL || fn == &CPU6502::ROL || fn == &CPU6502::ROR) {
             return "A";
         }
     }
