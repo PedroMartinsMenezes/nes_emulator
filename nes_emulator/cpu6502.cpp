@@ -220,7 +220,6 @@ CPU6502::CPU6502() {
     lookup[0x9A] = { "TXS", 1, &CPU6502::TXS, &CPU6502::IMP, 2 };
     lookup[0x98] = { "TYA", 1, &CPU6502::TYA, &CPU6502::IMP, 2 };
 
-
     #pragma region Illegal NOP entries
 
     //Illegal immediate NOP
@@ -623,12 +622,7 @@ uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
 uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
 
 //Pull Processor Status
-uint8_t CPU6502::PLP() {
-    P = pull();
-    setFlag(B, false);
-    setFlag(U, true);
-    return 0;
-}
+uint8_t CPU6502::PLP() { P = pull(); setFlag(B, false); setFlag(U, true); return 0; }
 
 #pragma endregion
 
@@ -971,25 +965,12 @@ uint8_t CPU6502::RRA() {
 
 #pragma endregion
 
-
-std::string CPU6502::flagsToString() const {
-    return std::string{
-        getFlag(N) ? 'N' : '.',
-        getFlag(V) ? 'V' : '.',
-        '-',
-        getFlag(B) ? 'B' : '.',
-        getFlag(D) ? 'D' : '.',
-        getFlag(I) ? 'I' : '.',
-        getFlag(Z) ? 'Z' : '.',
-        getFlag(C) ? 'C' : '.'
-    };
-}
+#pragma region Logging
 
 uint8_t CPU6502::peek(uint16_t addr) {
     return bus->cpuRead(addr, true);
 }
 
-#pragma region Logging
 void CPU6502::logState(std::ofstream& log) {
     uint16_t pc = PC;
 

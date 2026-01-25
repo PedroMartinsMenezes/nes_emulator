@@ -160,15 +160,17 @@ private: //Inner Types
 
 public:
 
-    std::string flagsToString() const;
-    uint8_t peek(uint16_t addr);
-    void logState(std::ofstream& log);
-    std::string formatOperand(uint16_t pc);
-    bool isMemoryOpcode(uint8_t op) const;
-    uint16_t computeEffectiveAddressForLog(uint16_t pc);
+    //clock functions
     inline int ppuCycle() const { return (int)(totalCycles * 3) % 341; }
     inline int ppuScanline() const { return (int)(totalCycles * 3) / 341; }
     uint64_t totalCycles = 0;
+
+    //log functions
+    void logState(std::ofstream& log);
+    bool isMemoryOpcode(uint8_t op) const;
+    std::string formatOperand(uint16_t pc);
+    uint8_t peek(uint16_t addr);
+    uint16_t computeEffectiveAddressForLog(uint16_t pc);
 
 public: //Inner Variables
 
