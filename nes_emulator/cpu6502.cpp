@@ -251,12 +251,12 @@ CPU6502::CPU6502() {
     lookup[0x0C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABS, 4 };
 
     //ABX illegal NOPs
-    lookup[0x1C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
-    lookup[0x3C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
-    lookup[0x5C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
-    lookup[0x7C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
-    lookup[0xDC] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
-    lookup[0xFC] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0x1C] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
+    lookup[0x3C] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
+    lookup[0x5C] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
+    lookup[0x7C] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
+    lookup[0xDC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
+    lookup[0xFC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
 
     #pragma endregion
 }
@@ -789,6 +789,11 @@ uint8_t CPU6502::BRK() {
 uint8_t CPU6502::NOP() {
     return 0;
 }
+
+uint8_t CPU6502::NOP1() {
+    return 1;   // pretend it is a read instruction for timing
+}
+
 
 //Return from Interrupt
 uint8_t CPU6502::RTI() {
