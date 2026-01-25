@@ -11,228 +11,257 @@ CPU6502::CPU6502() {
     lookup.fill({ "NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 });
 
     // --- ADC ---
-    lookup[0x69] = { "ADC",2,&CPU6502::ADC,&CPU6502::IMM,2 };
-    lookup[0x65] = { "ADC",2,&CPU6502::ADC,&CPU6502::ZP0,3 };
-    lookup[0x75] = { "ADC",2,&CPU6502::ADC,&CPU6502::ZPX,4 };
-    lookup[0x6D] = { "ADC",3,&CPU6502::ADC,&CPU6502::ABS,4 };
-    lookup[0x7D] = { "ADC",3,&CPU6502::ADC,&CPU6502::ABX,4 };
-    lookup[0x79] = { "ADC",3,&CPU6502::ADC,&CPU6502::ABY,4 };
-    lookup[0x61] = { "ADC",2,&CPU6502::ADC,&CPU6502::IZX,6 };
-    lookup[0x71] = { "ADC",2,&CPU6502::ADC,&CPU6502::IZY,5 };
+    lookup[0x69] = { "ADC", 2, &CPU6502::ADC, &CPU6502::IMM, 2 };
+    lookup[0x65] = { "ADC", 2, &CPU6502::ADC, &CPU6502::ZP0, 3 };
+    lookup[0x75] = { "ADC", 2, &CPU6502::ADC, &CPU6502::ZPX, 4 };
+    lookup[0x6D] = { "ADC", 3, &CPU6502::ADC, &CPU6502::ABS, 4 };
+    lookup[0x7D] = { "ADC", 3, &CPU6502::ADC, &CPU6502::ABX, 4 };
+    lookup[0x79] = { "ADC", 3, &CPU6502::ADC, &CPU6502::ABY, 4 };
+    lookup[0x61] = { "ADC", 2, &CPU6502::ADC, &CPU6502::IZX, 6 };
+    lookup[0x71] = { "ADC", 2, &CPU6502::ADC, &CPU6502::IZY, 5 };
 
     // --- AND ---
-    lookup[0x29] = { "AND",2,&CPU6502::AND,&CPU6502::IMM,2 };
-    lookup[0x25] = { "AND",2,&CPU6502::AND,&CPU6502::ZP0,3 };
-    lookup[0x35] = { "AND",2,&CPU6502::AND,&CPU6502::ZPX,4 };
-    lookup[0x2D] = { "AND",3,&CPU6502::AND,&CPU6502::ABS,4 };
-    lookup[0x3D] = { "AND",3,&CPU6502::AND,&CPU6502::ABX,4 };
-    lookup[0x39] = { "AND",3,&CPU6502::AND,&CPU6502::ABY,4 };
-    lookup[0x21] = { "AND",2,&CPU6502::AND,&CPU6502::IZX,6 };
-    lookup[0x31] = { "AND",2,&CPU6502::AND,&CPU6502::IZY,5 };
+    lookup[0x29] = { "AND", 2, &CPU6502::AND, &CPU6502::IMM, 2 };
+    lookup[0x25] = { "AND", 2, &CPU6502::AND, &CPU6502::ZP0, 3 };
+    lookup[0x35] = { "AND", 2, &CPU6502::AND, &CPU6502::ZPX, 4 };
+    lookup[0x2D] = { "AND", 3, &CPU6502::AND, &CPU6502::ABS, 4 };
+    lookup[0x3D] = { "AND", 3, &CPU6502::AND, &CPU6502::ABX, 4 };
+    lookup[0x39] = { "AND", 3, &CPU6502::AND, &CPU6502::ABY, 4 };
+    lookup[0x21] = { "AND", 2, &CPU6502::AND, &CPU6502::IZX, 6 };
+    lookup[0x31] = { "AND", 2, &CPU6502::AND, &CPU6502::IZY, 5 };
 
     // --- ASL ---
-    lookup[0x0A] = { "ASL",1,&CPU6502::ASL,&CPU6502::IMP,2 };
-    lookup[0x06] = { "ASL",2,&CPU6502::ASL,&CPU6502::ZP0,5 };
-    lookup[0x16] = { "ASL",2,&CPU6502::ASL,&CPU6502::ZPX,6 };
-    lookup[0x0E] = { "ASL",3,&CPU6502::ASL,&CPU6502::ABS,6 };
-    lookup[0x1E] = { "ASL",3,&CPU6502::ASL,&CPU6502::ABX,7 };
+    lookup[0x0A] = { "ASL", 1, &CPU6502::ASL, &CPU6502::IMP, 2 };
+    lookup[0x06] = { "ASL", 2, &CPU6502::ASL, &CPU6502::ZP0, 5 };
+    lookup[0x16] = { "ASL", 2, &CPU6502::ASL, &CPU6502::ZPX, 6 };
+    lookup[0x0E] = { "ASL", 3, &CPU6502::ASL, &CPU6502::ABS, 6 };
+    lookup[0x1E] = { "ASL", 3, &CPU6502::ASL, &CPU6502::ABX, 7 };
 
     // --- Branches ---
-    lookup[0x90] = { "BCC",0,&CPU6502::BCC,&CPU6502::REL,2 };
-    lookup[0xB0] = { "BCS",0,&CPU6502::BCS,&CPU6502::REL,2 };
-    lookup[0xF0] = { "BEQ",0,&CPU6502::BEQ,&CPU6502::REL,2 };
-    lookup[0x30] = { "BMI",0,&CPU6502::BMI,&CPU6502::REL,2 };
-    lookup[0xD0] = { "BNE",0,&CPU6502::BNE,&CPU6502::REL,2 };
-    lookup[0x10] = { "BPL",0,&CPU6502::BPL,&CPU6502::REL,2 };
-    lookup[0x50] = { "BVC",0,&CPU6502::BVC,&CPU6502::REL,2 };
-    lookup[0x70] = { "BVS",0,&CPU6502::BVS,&CPU6502::REL,2 };
+    lookup[0x90] = { "BCC", 0, &CPU6502::BCC, &CPU6502::REL, 2 };
+    lookup[0xB0] = { "BCS", 0, &CPU6502::BCS, &CPU6502::REL, 2 };
+    lookup[0xF0] = { "BEQ", 0, &CPU6502::BEQ, &CPU6502::REL, 2 };
+    lookup[0x30] = { "BMI", 0, &CPU6502::BMI, &CPU6502::REL, 2 };
+    lookup[0xD0] = { "BNE", 0, &CPU6502::BNE, &CPU6502::REL, 2 };
+    lookup[0x10] = { "BPL", 0, &CPU6502::BPL, &CPU6502::REL, 2 };
+    lookup[0x50] = { "BVC", 0, &CPU6502::BVC, &CPU6502::REL, 2 };
+    lookup[0x70] = { "BVS", 0, &CPU6502::BVS, &CPU6502::REL, 2 };
 
     // --- BIT ---
-    lookup[0x24] = { "BIT",2,&CPU6502::BIT,&CPU6502::ZP0,3 };
-    lookup[0x2C] = { "BIT",3,&CPU6502::BIT,&CPU6502::ABS,4 };
+    lookup[0x24] = { "BIT", 2, &CPU6502::BIT, &CPU6502::ZP0, 3 };
+    lookup[0x2C] = { "BIT", 3, &CPU6502::BIT, &CPU6502::ABS, 4 };
 
     // --- BRK ---
-    lookup[0x00] = { "BRK",1,&CPU6502::BRK,&CPU6502::IMP,7 };
+    lookup[0x00] = { "BRK", 1, &CPU6502::BRK, &CPU6502::IMP, 7 };
 
     // --- Clear flags ---
-    lookup[0x18] = { "CLC",1,&CPU6502::CLC,&CPU6502::IMP,2 };
-    lookup[0xD8] = { "CLD",1,&CPU6502::CLD,&CPU6502::IMP,2 };
-    lookup[0x58] = { "CLI",1,&CPU6502::CLI,&CPU6502::IMP,2 };
-    lookup[0xB8] = { "CLV",1,&CPU6502::CLV,&CPU6502::IMP,2 };
+    lookup[0x18] = { "CLC", 1, &CPU6502::CLC, &CPU6502::IMP, 2 };
+    lookup[0xD8] = { "CLD", 1, &CPU6502::CLD, &CPU6502::IMP, 2 };
+    lookup[0x58] = { "CLI", 1, &CPU6502::CLI, &CPU6502::IMP, 2 };
+    lookup[0xB8] = { "CLV", 1, &CPU6502::CLV, &CPU6502::IMP, 2 };
 
     // --- CMP ---
-    lookup[0xC9] = { "CMP",2,&CPU6502::CMP,&CPU6502::IMM,2 };
-    lookup[0xC5] = { "CMP",2,&CPU6502::CMP,&CPU6502::ZP0,3 };
-    lookup[0xD5] = { "CMP",2,&CPU6502::CMP,&CPU6502::ZPX,4 };
-    lookup[0xCD] = { "CMP",3,&CPU6502::CMP,&CPU6502::ABS,4 };
-    lookup[0xDD] = { "CMP",3,&CPU6502::CMP,&CPU6502::ABX,4 };
-    lookup[0xD9] = { "CMP",3,&CPU6502::CMP,&CPU6502::ABY,4 };
-    lookup[0xC1] = { "CMP",2,&CPU6502::CMP,&CPU6502::IZX,6 };
-    lookup[0xD1] = { "CMP",2,&CPU6502::CMP,&CPU6502::IZY,5 };
+    lookup[0xC9] = { "CMP", 2, &CPU6502::CMP, &CPU6502::IMM, 2 };
+    lookup[0xC5] = { "CMP", 2, &CPU6502::CMP, &CPU6502::ZP0, 3 };
+    lookup[0xD5] = { "CMP", 2, &CPU6502::CMP, &CPU6502::ZPX, 4 };
+    lookup[0xCD] = { "CMP", 3, &CPU6502::CMP, &CPU6502::ABS, 4 };
+    lookup[0xDD] = { "CMP", 3, &CPU6502::CMP, &CPU6502::ABX, 4 };
+    lookup[0xD9] = { "CMP", 3, &CPU6502::CMP, &CPU6502::ABY, 4 };
+    lookup[0xC1] = { "CMP", 2, &CPU6502::CMP, &CPU6502::IZX, 6 };
+    lookup[0xD1] = { "CMP", 2, &CPU6502::CMP, &CPU6502::IZY, 5 };
 
     // --- CPX ---
-    lookup[0xE0] = { "CPX",2,&CPU6502::CPX,&CPU6502::IMM,2 };
-    lookup[0xE4] = { "CPX",2,&CPU6502::CPX,&CPU6502::ZP0,3 };
-    lookup[0xEC] = { "CPX",3,&CPU6502::CPX,&CPU6502::ABS,4 };
+    lookup[0xE0] = { "CPX", 2, &CPU6502::CPX, &CPU6502::IMM, 2 };
+    lookup[0xE4] = { "CPX", 2, &CPU6502::CPX, &CPU6502::ZP0, 3 };
+    lookup[0xEC] = { "CPX", 3, &CPU6502::CPX, &CPU6502::ABS, 4 };
 
     // --- CPY ---
-    lookup[0xC0] = { "CPY",2,&CPU6502::CPY,&CPU6502::IMM,2 };
-    lookup[0xC4] = { "CPY",2,&CPU6502::CPY,&CPU6502::ZP0,3 };
-    lookup[0xCC] = { "CPY",3,&CPU6502::CPY,&CPU6502::ABS,4 };
+    lookup[0xC0] = { "CPY", 2, &CPU6502::CPY, &CPU6502::IMM, 2 };
+    lookup[0xC4] = { "CPY", 2, &CPU6502::CPY, &CPU6502::ZP0, 3 };
+    lookup[0xCC] = { "CPY", 3, &CPU6502::CPY, &CPU6502::ABS, 4 };
 
     // --- DEC / DEX / DEY ---
-    lookup[0xC6] = { "DEC",2,&CPU6502::DEC,&CPU6502::ZP0,5 };
-    lookup[0xD6] = { "DEC",2,&CPU6502::DEC,&CPU6502::ZPX,6 };
-    lookup[0xCE] = { "DEC",3,&CPU6502::DEC,&CPU6502::ABS,6 };
-    lookup[0xDE] = { "DEC",3,&CPU6502::DEC,&CPU6502::ABX,7 };
-    lookup[0xCA] = { "DEX",1,&CPU6502::DEX,&CPU6502::IMP,2 };
-    lookup[0x88] = { "DEY",1,&CPU6502::DEY,&CPU6502::IMP,2 };
+    lookup[0xC6] = { "DEC", 2, &CPU6502::DEC, &CPU6502::ZP0, 5 };
+    lookup[0xD6] = { "DEC", 2, &CPU6502::DEC, &CPU6502::ZPX, 6 };
+    lookup[0xCE] = { "DEC", 3, &CPU6502::DEC, &CPU6502::ABS, 6 };
+    lookup[0xDE] = { "DEC", 3, &CPU6502::DEC, &CPU6502::ABX, 7 };
+    lookup[0xCA] = { "DEX", 1, &CPU6502::DEX, &CPU6502::IMP, 2 };
+    lookup[0x88] = { "DEY", 1, &CPU6502::DEY, &CPU6502::IMP, 2 };
 
     // --- EOR ---
-    lookup[0x49] = { "EOR",2,&CPU6502::EOR,&CPU6502::IMM,2 };
-    lookup[0x45] = { "EOR",2,&CPU6502::EOR,&CPU6502::ZP0,3 };
-    lookup[0x55] = { "EOR",2,&CPU6502::EOR,&CPU6502::ZPX,4 };
-    lookup[0x4D] = { "EOR",3,&CPU6502::EOR,&CPU6502::ABS,4 };
-    lookup[0x5D] = { "EOR",3,&CPU6502::EOR,&CPU6502::ABX,4 };
-    lookup[0x59] = { "EOR",3,&CPU6502::EOR,&CPU6502::ABY,4 };
-    lookup[0x41] = { "EOR",2,&CPU6502::EOR,&CPU6502::IZX,6 };
-    lookup[0x51] = { "EOR",2,&CPU6502::EOR,&CPU6502::IZY,5 };
+    lookup[0x49] = { "EOR", 2, &CPU6502::EOR, &CPU6502::IMM, 2 };
+    lookup[0x45] = { "EOR", 2, &CPU6502::EOR, &CPU6502::ZP0, 3 };
+    lookup[0x55] = { "EOR", 2, &CPU6502::EOR, &CPU6502::ZPX, 4 };
+    lookup[0x4D] = { "EOR", 3, &CPU6502::EOR, &CPU6502::ABS, 4 };
+    lookup[0x5D] = { "EOR", 3, &CPU6502::EOR, &CPU6502::ABX, 4 };
+    lookup[0x59] = { "EOR", 3, &CPU6502::EOR, &CPU6502::ABY, 4 };
+    lookup[0x41] = { "EOR", 2, &CPU6502::EOR, &CPU6502::IZX, 6 };
+    lookup[0x51] = { "EOR", 2, &CPU6502::EOR, &CPU6502::IZY, 5 };
 
     // --- INC / INX / INY ---
-    lookup[0xE6] = { "INC",2,&CPU6502::INC,&CPU6502::ZP0,5 };
-    lookup[0xF6] = { "INC",2,&CPU6502::INC,&CPU6502::ZPX,6 };
-    lookup[0xEE] = { "INC",3,&CPU6502::INC,&CPU6502::ABS,6 };
-    lookup[0xFE] = { "INC",3,&CPU6502::INC,&CPU6502::ABX,7 };
-    lookup[0xE8] = { "INX",1,&CPU6502::INX,&CPU6502::IMP,2 };
-    lookup[0xC8] = { "INY",1,&CPU6502::INY,&CPU6502::IMP,2 };
+    lookup[0xE6] = { "INC", 2, &CPU6502::INC, &CPU6502::ZP0, 5 };
+    lookup[0xF6] = { "INC", 2, &CPU6502::INC, &CPU6502::ZPX, 6 };
+    lookup[0xEE] = { "INC", 3, &CPU6502::INC, &CPU6502::ABS, 6 };
+    lookup[0xFE] = { "INC", 3, &CPU6502::INC, &CPU6502::ABX, 7 };
+    lookup[0xE8] = { "INX", 1, &CPU6502::INX, &CPU6502::IMP, 2 };
+    lookup[0xC8] = { "INY", 1, &CPU6502::INY, &CPU6502::IMP, 2 };
 
     // --- JMP / JSR ---
-    lookup[0x4C] = { "JMP",3,&CPU6502::JMP,&CPU6502::ABS,3 };
-    lookup[0x6C] = { "JMP",3,&CPU6502::JMP,&CPU6502::IND,5 };
-    lookup[0x20] = { "JSR",3,&CPU6502::JSR,&CPU6502::ABS,6 };
+    lookup[0x4C] = { "JMP", 3, &CPU6502::JMP, &CPU6502::ABS, 3 };
+    lookup[0x6C] = { "JMP", 3, &CPU6502::JMP, &CPU6502::IND, 5 };
+    lookup[0x20] = { "JSR", 3, &CPU6502::JSR, &CPU6502::ABS, 6 };
 
     // --- LDA ---
-    lookup[0xA9] = { "LDA",2,&CPU6502::LDA,&CPU6502::IMM,2 };
-    lookup[0xA5] = { "LDA",2,&CPU6502::LDA,&CPU6502::ZP0,3 };
-    lookup[0xB5] = { "LDA",2,&CPU6502::LDA,&CPU6502::ZPX,4 };
-    lookup[0xAD] = { "LDA",3,&CPU6502::LDA,&CPU6502::ABS,4 };
-    lookup[0xBD] = { "LDA",3,&CPU6502::LDA,&CPU6502::ABX,4 };
-    lookup[0xB9] = { "LDA",3,&CPU6502::LDA,&CPU6502::ABY,4 };
-    lookup[0xA1] = { "LDA",2,&CPU6502::LDA,&CPU6502::IZX,6 };
-    lookup[0xB1] = { "LDA",2,&CPU6502::LDA,&CPU6502::IZY,5 };
+    lookup[0xA9] = { "LDA", 2, &CPU6502::LDA, &CPU6502::IMM, 2 };
+    lookup[0xA5] = { "LDA", 2, &CPU6502::LDA, &CPU6502::ZP0, 3 };
+    lookup[0xB5] = { "LDA", 2, &CPU6502::LDA, &CPU6502::ZPX, 4 };
+    lookup[0xAD] = { "LDA", 3, &CPU6502::LDA, &CPU6502::ABS, 4 };
+    lookup[0xBD] = { "LDA", 3, &CPU6502::LDA, &CPU6502::ABX, 4 };
+    lookup[0xB9] = { "LDA", 3, &CPU6502::LDA, &CPU6502::ABY, 4 };
+    lookup[0xA1] = { "LDA", 2, &CPU6502::LDA, &CPU6502::IZX, 6 };
+    lookup[0xB1] = { "LDA", 2, &CPU6502::LDA, &CPU6502::IZY, 5 };
 
     // --- LDX ---
-    lookup[0xA2] = { "LDX",2,&CPU6502::LDX,&CPU6502::IMM,2 };
-    lookup[0xA6] = { "LDX",2,&CPU6502::LDX,&CPU6502::ZP0,3 };
-    lookup[0xB6] = { "LDX",2,&CPU6502::LDX,&CPU6502::ZPY,4 };
-    lookup[0xAE] = { "LDX",3,&CPU6502::LDX,&CPU6502::ABS,4 };
-    lookup[0xBE] = { "LDX",3,&CPU6502::LDX,&CPU6502::ABY,4 };
+    lookup[0xA2] = { "LDX", 2, &CPU6502::LDX, &CPU6502::IMM, 2 };
+    lookup[0xA6] = { "LDX", 2, &CPU6502::LDX, &CPU6502::ZP0, 3 };
+    lookup[0xB6] = { "LDX", 2, &CPU6502::LDX, &CPU6502::ZPY, 4 };
+    lookup[0xAE] = { "LDX", 3, &CPU6502::LDX, &CPU6502::ABS, 4 };
+    lookup[0xBE] = { "LDX", 3, &CPU6502::LDX, &CPU6502::ABY, 4 };
 
     // --- LDY ---
-    lookup[0xA0] = { "LDY",2,&CPU6502::LDY,&CPU6502::IMM,2 };
-    lookup[0xA4] = { "LDY",2,&CPU6502::LDY,&CPU6502::ZP0,3 };
-    lookup[0xB4] = { "LDY",2,&CPU6502::LDY,&CPU6502::ZPX,4 };
-    lookup[0xAC] = { "LDY",3,&CPU6502::LDY,&CPU6502::ABS,4 };
-    lookup[0xBC] = { "LDY",3,&CPU6502::LDY,&CPU6502::ABX,4 };
+    lookup[0xA0] = { "LDY", 2, &CPU6502::LDY, &CPU6502::IMM, 2 };
+    lookup[0xA4] = { "LDY", 2, &CPU6502::LDY, &CPU6502::ZP0, 3 };
+    lookup[0xB4] = { "LDY", 2, &CPU6502::LDY, &CPU6502::ZPX, 4 };
+    lookup[0xAC] = { "LDY", 3, &CPU6502::LDY, &CPU6502::ABS, 4 };
+    lookup[0xBC] = { "LDY", 3, &CPU6502::LDY, &CPU6502::ABX, 4 };
 
     // --- LSR ---
-    lookup[0x4A] = { "LSR",1,&CPU6502::LSR,&CPU6502::IMP,2 };
-    lookup[0x46] = { "LSR",2,&CPU6502::LSR,&CPU6502::ZP0,5 };
-    lookup[0x56] = { "LSR",2,&CPU6502::LSR,&CPU6502::ZPX,6 };
-    lookup[0x4E] = { "LSR",3,&CPU6502::LSR,&CPU6502::ABS,6 };
-    lookup[0x5E] = { "LSR",3,&CPU6502::LSR,&CPU6502::ABX,7 };
+    lookup[0x4A] = { "LSR", 1, &CPU6502::LSR, &CPU6502::IMP, 2 };
+    lookup[0x46] = { "LSR", 2, &CPU6502::LSR, &CPU6502::ZP0, 5 };
+    lookup[0x56] = { "LSR", 2, &CPU6502::LSR, &CPU6502::ZPX, 6 };
+    lookup[0x4E] = { "LSR", 3, &CPU6502::LSR, &CPU6502::ABS, 6 };
+    lookup[0x5E] = { "LSR", 3, &CPU6502::LSR, &CPU6502::ABX, 7 };
 
     // --- NOP ---
-    lookup[0xEA] = { "NOP",1,&CPU6502::NOP,&CPU6502::IMP,2 };
+    lookup[0xEA] = { "NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 };
 
     // --- ORA ---
-    lookup[0x09] = { "ORA",2,&CPU6502::ORA,&CPU6502::IMM,2 };
-    lookup[0x05] = { "ORA",2,&CPU6502::ORA,&CPU6502::ZP0,3 };
-    lookup[0x15] = { "ORA",2,&CPU6502::ORA,&CPU6502::ZPX,4 };
-    lookup[0x0D] = { "ORA",3,&CPU6502::ORA,&CPU6502::ABS,4 };
-    lookup[0x1D] = { "ORA",3,&CPU6502::ORA,&CPU6502::ABX,4 };
-    lookup[0x19] = { "ORA",3,&CPU6502::ORA,&CPU6502::ABY,4 };
-    lookup[0x01] = { "ORA",2,&CPU6502::ORA,&CPU6502::IZX,6 };
-    lookup[0x11] = { "ORA",2,&CPU6502::ORA,&CPU6502::IZY,5 };
+    lookup[0x09] = { "ORA", 2, &CPU6502::ORA, &CPU6502::IMM, 2 };
+    lookup[0x05] = { "ORA", 2, &CPU6502::ORA, &CPU6502::ZP0, 3 };
+    lookup[0x15] = { "ORA", 2, &CPU6502::ORA, &CPU6502::ZPX, 4 };
+    lookup[0x0D] = { "ORA", 3, &CPU6502::ORA, &CPU6502::ABS, 4 };
+    lookup[0x1D] = { "ORA", 3, &CPU6502::ORA, &CPU6502::ABX, 4 };
+    lookup[0x19] = { "ORA", 3, &CPU6502::ORA, &CPU6502::ABY, 4 };
+    lookup[0x01] = { "ORA", 2, &CPU6502::ORA, &CPU6502::IZX, 6 };
+    lookup[0x11] = { "ORA", 2, &CPU6502::ORA, &CPU6502::IZY, 5 };
 
     // --- Stack ---
-    lookup[0x48] = { "PHA",1,&CPU6502::PHA,&CPU6502::IMP,3 };
-    lookup[0x68] = { "PLA",1,&CPU6502::PLA,&CPU6502::IMP,4 };
-    lookup[0x08] = { "PHP",1,&CPU6502::PHP,&CPU6502::IMP,3 };
-    lookup[0x28] = { "PLP",1,&CPU6502::PLP,&CPU6502::IMP,4 };
+    lookup[0x48] = { "PHA", 1, &CPU6502::PHA, &CPU6502::IMP, 3 };
+    lookup[0x68] = { "PLA", 1, &CPU6502::PLA, &CPU6502::IMP, 4 };
+    lookup[0x08] = { "PHP", 1, &CPU6502::PHP, &CPU6502::IMP, 3 };
+    lookup[0x28] = { "PLP", 1, &CPU6502::PLP, &CPU6502::IMP, 4 };
 
     // --- ROL / ROR ---
-    lookup[0x2A] = { "ROL",1,&CPU6502::ROL,&CPU6502::IMP,2 };
-    lookup[0x26] = { "ROL",2,&CPU6502::ROL,&CPU6502::ZP0,5 };
-    lookup[0x36] = { "ROL",2,&CPU6502::ROL,&CPU6502::ZPX,6 };
-    lookup[0x2E] = { "ROL",3,&CPU6502::ROL,&CPU6502::ABS,6 };
-    lookup[0x3E] = { "ROL",3,&CPU6502::ROL,&CPU6502::ABX,7 };
+    lookup[0x2A] = { "ROL", 1, &CPU6502::ROL, &CPU6502::IMP, 2 };
+    lookup[0x26] = { "ROL", 2, &CPU6502::ROL, &CPU6502::ZP0, 5 };
+    lookup[0x36] = { "ROL", 2, &CPU6502::ROL, &CPU6502::ZPX, 6 };
+    lookup[0x2E] = { "ROL", 3, &CPU6502::ROL, &CPU6502::ABS, 6 };
+    lookup[0x3E] = { "ROL", 3, &CPU6502::ROL, &CPU6502::ABX, 7 };
 
-    lookup[0x6A] = { "ROR",1,&CPU6502::ROR,&CPU6502::IMP,2 };
-    lookup[0x66] = { "ROR",2,&CPU6502::ROR,&CPU6502::ZP0,5 };
-    lookup[0x76] = { "ROR",2,&CPU6502::ROR,&CPU6502::ZPX,6 };
-    lookup[0x6E] = { "ROR",3,&CPU6502::ROR,&CPU6502::ABS,6 };
-    lookup[0x7E] = { "ROR",3,&CPU6502::ROR,&CPU6502::ABX,7 };
+    lookup[0x6A] = { "ROR", 1, &CPU6502::ROR, &CPU6502::IMP, 2 };
+    lookup[0x66] = { "ROR", 2, &CPU6502::ROR, &CPU6502::ZP0, 5 };
+    lookup[0x76] = { "ROR", 2, &CPU6502::ROR, &CPU6502::ZPX, 6 };
+    lookup[0x6E] = { "ROR", 3, &CPU6502::ROR, &CPU6502::ABS, 6 };
+    lookup[0x7E] = { "ROR", 3, &CPU6502::ROR, &CPU6502::ABX, 7 };
 
     // --- RTI / RTS ---
-    lookup[0x40] = { "RTI",1,&CPU6502::RTI,&CPU6502::IMP,6 };
-    lookup[0x60] = { "RTS",1,&CPU6502::RTS,&CPU6502::IMP,6 };
+    lookup[0x40] = { "RTI", 1, &CPU6502::RTI, &CPU6502::IMP, 6 };
+    lookup[0x60] = { "RTS", 1, &CPU6502::RTS, &CPU6502::IMP, 6 };
 
     // --- SBC ---
-    lookup[0xE9] = { "SBC",2,&CPU6502::SBC,&CPU6502::IMM,2 };
-    lookup[0xE5] = { "SBC",2,&CPU6502::SBC,&CPU6502::ZP0,3 };
-    lookup[0xF5] = { "SBC",2,&CPU6502::SBC,&CPU6502::ZPX,4 };
-    lookup[0xED] = { "SBC",3,&CPU6502::SBC,&CPU6502::ABS,4 };
-    lookup[0xFD] = { "SBC",3,&CPU6502::SBC,&CPU6502::ABX,4 };
-    lookup[0xF9] = { "SBC",3,&CPU6502::SBC,&CPU6502::ABY,4 };
-    lookup[0xE1] = { "SBC",2,&CPU6502::SBC,&CPU6502::IZX,6 };
-    lookup[0xF1] = { "SBC",2,&CPU6502::SBC,&CPU6502::IZY,5 };
+    lookup[0xE9] = { "SBC", 2, &CPU6502::SBC, &CPU6502::IMM, 2 };
+    lookup[0xE5] = { "SBC", 2, &CPU6502::SBC, &CPU6502::ZP0, 3 };
+    lookup[0xF5] = { "SBC", 2, &CPU6502::SBC, &CPU6502::ZPX, 4 };
+    lookup[0xED] = { "SBC", 3, &CPU6502::SBC, &CPU6502::ABS, 4 };
+    lookup[0xFD] = { "SBC", 3, &CPU6502::SBC, &CPU6502::ABX, 4 };
+    lookup[0xF9] = { "SBC", 3, &CPU6502::SBC, &CPU6502::ABY, 4 };
+    lookup[0xE1] = { "SBC", 2, &CPU6502::SBC, &CPU6502::IZX, 6 };
+    lookup[0xF1] = { "SBC", 2, &CPU6502::SBC, &CPU6502::IZY, 5 };
 
     // --- Set flags ---
-    lookup[0x38] = { "SEC",1,&CPU6502::SEC,&CPU6502::IMP,2 };
-    lookup[0xF8] = { "SED",1,&CPU6502::SED,&CPU6502::IMP,2 };
-    lookup[0x78] = { "SEI",1,&CPU6502::SEI,&CPU6502::IMP,2 };
+    lookup[0x38] = { "SEC", 1, &CPU6502::SEC, &CPU6502::IMP, 2 };
+    lookup[0xF8] = { "SED", 1, &CPU6502::SED, &CPU6502::IMP, 2 };
+    lookup[0x78] = { "SEI", 1, &CPU6502::SEI, &CPU6502::IMP, 2 };
 
     // --- STA ---
-    lookup[0x85] = { "STA",2,&CPU6502::STA,&CPU6502::ZP0,3 };
-    lookup[0x95] = { "STA",2,&CPU6502::STA,&CPU6502::ZPX,4 };
-    lookup[0x8D] = { "STA",3,&CPU6502::STA,&CPU6502::ABS,4 };
-    lookup[0x9D] = { "STA",3,&CPU6502::STA,&CPU6502::ABX,5 };
-    lookup[0x99] = { "STA",3,&CPU6502::STA,&CPU6502::ABY,5 };
-    lookup[0x81] = { "STA",2,&CPU6502::STA,&CPU6502::IZX,6 };
-    lookup[0x91] = { "STA",2,&CPU6502::STA,&CPU6502::IZY,6 };
+    lookup[0x85] = { "STA", 2, &CPU6502::STA, &CPU6502::ZP0, 3 };
+    lookup[0x95] = { "STA", 2, &CPU6502::STA, &CPU6502::ZPX, 4 };
+    lookup[0x8D] = { "STA", 3, &CPU6502::STA, &CPU6502::ABS, 4 };
+    lookup[0x9D] = { "STA", 3, &CPU6502::STA, &CPU6502::ABX, 5 };
+    lookup[0x99] = { "STA", 3, &CPU6502::STA, &CPU6502::ABY, 5 };
+    lookup[0x81] = { "STA", 2, &CPU6502::STA, &CPU6502::IZX, 6 };
+    lookup[0x91] = { "STA", 2, &CPU6502::STA, &CPU6502::IZY, 6 };
 
     // --- STX ---
-    lookup[0x86] = { "STX",2,&CPU6502::STX,&CPU6502::ZP0,3 };
-    lookup[0x96] = { "STX",2,&CPU6502::STX,&CPU6502::ZPY,4 };
-    lookup[0x8E] = { "STX",3,&CPU6502::STX,&CPU6502::ABS,4 };
+    lookup[0x86] = { "STX", 2, &CPU6502::STX, &CPU6502::ZP0, 3 };
+    lookup[0x96] = { "STX", 2, &CPU6502::STX, &CPU6502::ZPY, 4 };
+    lookup[0x8E] = { "STX", 3, &CPU6502::STX, &CPU6502::ABS, 4 };
 
     // --- STY ---
-    lookup[0x84] = { "STY",2,&CPU6502::STY,&CPU6502::ZP0,3 };
-    lookup[0x94] = { "STY",2,&CPU6502::STY,&CPU6502::ZPX,4 };
-    lookup[0x8C] = { "STY",3,&CPU6502::STY,&CPU6502::ABS,4 };
+    lookup[0x84] = { "STY", 2, &CPU6502::STY, &CPU6502::ZP0, 3 };
+    lookup[0x94] = { "STY", 2, &CPU6502::STY, &CPU6502::ZPX, 4 };
+    lookup[0x8C] = { "STY", 3, &CPU6502::STY, &CPU6502::ABS, 4 };
 
     // --- Transfers ---
-    lookup[0xAA] = { "TAX",1,&CPU6502::TAX,&CPU6502::IMP,2 };
-    lookup[0xA8] = { "TAY",1,&CPU6502::TAY,&CPU6502::IMP,2 };
-    lookup[0xBA] = { "TSX",1,&CPU6502::TSX,&CPU6502::IMP,2 };
-    lookup[0x8A] = { "TXA",1,&CPU6502::TXA,&CPU6502::IMP,2 };
-    lookup[0x9A] = { "TXS",1,&CPU6502::TXS,&CPU6502::IMP,2 };
-    lookup[0x98] = { "TYA",1,&CPU6502::TYA,&CPU6502::IMP,2 };
+    lookup[0xAA] = { "TAX", 1, &CPU6502::TAX, &CPU6502::IMP, 2 };
+    lookup[0xA8] = { "TAY", 1, &CPU6502::TAY, &CPU6502::IMP, 2 };
+    lookup[0xBA] = { "TSX", 1, &CPU6502::TSX, &CPU6502::IMP, 2 };
+    lookup[0x8A] = { "TXA", 1, &CPU6502::TXA, &CPU6502::IMP, 2 };
+    lookup[0x9A] = { "TXS", 1, &CPU6502::TXS, &CPU6502::IMP, 2 };
+    lookup[0x98] = { "TYA", 1, &CPU6502::TYA, &CPU6502::IMP, 2 };
+
+
+    #pragma region Illegal NOP entries
+
+    //Zero-page illegal NOPs (DOP)
+    lookup[0x04] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZP0, 3 };
+    lookup[0x44] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZP0, 3 };
+    lookup[0x64] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZP0, 3 };
+
+    //ZPX illegal NOPs
+    lookup[0x14] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+    lookup[0x34] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+    lookup[0x54] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+    lookup[0x74] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+    lookup[0xD4] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+    lookup[0xF4] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::ZPX, 4 };
+
+    //Absolute illegal NOP
+    lookup[0x0C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABS, 4 };
+
+    //ABX illegal NOPs
+    lookup[0x1C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0x3C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0x5C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0x7C] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0xDC] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+    lookup[0xFC] = { "*NOP", 3, &CPU6502::NOP, &CPU6502::ABX, 4 };
+
+    #pragma endregion
 }
 
 #pragma endregion
 
 #pragma region Helpers
 
-uint8_t CPU6502::getFlag(FLAGS f) const { 
+uint8_t CPU6502::getFlag(FLAGS f) const {
     return (P & f) ? 1 : 0;
 }
 
 void CPU6502::setFlag(FLAGS f, bool v) {
-    if (v) 
+    if (v)
         P |= f;
-    else   
+    else
         P &= ~f;
 }
 
@@ -347,15 +376,15 @@ uint8_t CPU6502::pull() {
 #pragma region Addressing Modes - https://www.nesdev.org/obelisk-6502-guide/addressing.html
 
 //Implicit
-uint8_t CPU6502::IMP() { 
-    fetched = A; 
-    return 0; 
+uint8_t CPU6502::IMP() {
+    fetched = A;
+    return 0;
 }
 
 //Immediate
-uint8_t CPU6502::IMM() { 
-    addr_abs = PC++; 
-    return 0; 
+uint8_t CPU6502::IMM() {
+    addr_abs = PC++;
+    return 0;
 }
 
 //Zero Page
@@ -512,7 +541,7 @@ uint8_t CPU6502::PHP() { push(P | B | U); return 0; }
 uint8_t CPU6502::PLA() { A = pull(); setFlag(Z, A == 0); setFlag(N, A & 0x80); return 0; }
 
 //Pull Processor Status
-uint8_t CPU6502::PLP() { 
+uint8_t CPU6502::PLP() {
     P = pull();
     setFlag(B, false);
     setFlag(U, true);
@@ -789,7 +818,7 @@ void CPU6502::logState(std::ofstream& log) {
     uint16_t pc = PC;
 
     uint8_t op = peek(pc);
-    
+
     char byte1[3] = "  ";
     if (lookup[op].bytes > 1 || lookup[op].addrmode == &CPU6502::REL)
         std::sprintf(byte1, "%X", peek(pc + 1));
@@ -806,15 +835,20 @@ void CPU6502::logState(std::ofstream& log) {
     int ppuX = (int)(cyc * 3) % 341;
     int ppuY = (int)(cyc * 3) / 341;
 
+    char prefix[2] = " ";
+    if (lookup[op].name[0] == '*')
+        prefix[0] = '\0';
+
     char buffer[160];
 
     snprintf(
         buffer, sizeof(buffer),
-        "%04X  %02X %02s %02s  %-3s %-27s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%llu",
+        "%04X  %02X %02s %02s %s%-3s %-27s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%llu",
         pc,
-        op, 
+        op,
         byte1,
         byte2,
+        prefix,
         lookup[op].name,
         operand.c_str(),
         A, X, Y, P, SP,
@@ -951,13 +985,16 @@ bool CPU6502::isMemoryOpcode(uint8_t op) const {
         fn == &CPU6502::CPX ||
         fn == &CPU6502::CPY ||
 
-        // ---- Read-modify-write ----
+        // Read-modify-write
         fn == &CPU6502::INC ||
         fn == &CPU6502::DEC ||
         fn == &CPU6502::ASL ||
         fn == &CPU6502::LSR ||
         fn == &CPU6502::ROL ||
-        fn == &CPU6502::ROR;
+        fn == &CPU6502::ROR ||
+
+        // Illegal NOPs (DOP / TOP)
+        lookup[op].name[0] == '*';
 }
 
 uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
