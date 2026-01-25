@@ -258,17 +258,7 @@ CPU6502::CPU6502() {
     lookup[0xDC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
     lookup[0xFC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
 
-    // --- Illegal LAX ---
-    lookup[0xA3] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::IZX, 6 };
-    lookup[0xA7] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::ZP0, 3 };
-    lookup[0xAF] = { "*LAX", 3, &CPU6502::LAX, &CPU6502::ABS, 4 };
-    lookup[0xB3] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::IZY, 5 };
-    lookup[0xB7] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::ZPY, 4 };
-    lookup[0xBF] = { "*LAX", 3, &CPU6502::LAX, &CPU6502::ABY, 4 };
-
-    //========================================================
-
-    // ---------- LAX ----------
+    // Illegal LAX
     lookup[0xA3] = { "*LAX",2,&CPU6502::LAX,&CPU6502::IZX,6 };
     lookup[0xA7] = { "*LAX",2,&CPU6502::LAX,&CPU6502::ZP0,3 };
     lookup[0xAF] = { "*LAX",3,&CPU6502::LAX,&CPU6502::ABS,4 };
@@ -276,13 +266,13 @@ CPU6502::CPU6502() {
     lookup[0xB7] = { "*LAX",2,&CPU6502::LAX,&CPU6502::ZPY,4 };
     lookup[0xBF] = { "*LAX",3,&CPU6502::LAX,&CPU6502::ABY,4 };
 
-    // ---------- SAX ----------
+    // Illegal SAX
     lookup[0x83] = { "*SAX",2,&CPU6502::SAX,&CPU6502::IZX,6 };
     lookup[0x87] = { "*SAX",2,&CPU6502::SAX,&CPU6502::ZP0,3 };
     lookup[0x8F] = { "*SAX",3,&CPU6502::SAX,&CPU6502::ABS,4 };
     lookup[0x97] = { "*SAX",2,&CPU6502::SAX,&CPU6502::ZPY,4 };
 
-    // ---------- DCP ----------
+    // Illegal DCP
     lookup[0xC3] = { "*DCP",2,&CPU6502::DCP,&CPU6502::IZX,8 };
     lookup[0xC7] = { "*DCP",2,&CPU6502::DCP,&CPU6502::ZP0,5 };
     lookup[0xCF] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABS,6 };
@@ -291,7 +281,7 @@ CPU6502::CPU6502() {
     lookup[0xDB] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABY,7 };
     lookup[0xDF] = { "*DCP",3,&CPU6502::DCP,&CPU6502::ABX,7 };
 
-    // ---------- ISC ----------
+    // Illegal ISC
     lookup[0xE3] = { "*ISC",2,&CPU6502::ISC,&CPU6502::IZX,8 };
     lookup[0xE7] = { "*ISC",2,&CPU6502::ISC,&CPU6502::ZP0,5 };
     lookup[0xEF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABS,6 };
@@ -300,7 +290,7 @@ CPU6502::CPU6502() {
     lookup[0xFB] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABY,7 };
     lookup[0xFF] = { "*ISC",3,&CPU6502::ISC,&CPU6502::ABX,7 };
 
-    // ---------- SLO ----------
+    // Illegal SLO
     lookup[0x03] = { "*SLO",2,&CPU6502::SLO,&CPU6502::IZX,8 };
     lookup[0x07] = { "*SLO",2,&CPU6502::SLO,&CPU6502::ZP0,5 };
     lookup[0x0F] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABS,6 };
@@ -309,7 +299,7 @@ CPU6502::CPU6502() {
     lookup[0x1B] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABY,7 };
     lookup[0x1F] = { "*SLO",3,&CPU6502::SLO,&CPU6502::ABX,7 };
 
-    // ---------- RLA ----------
+    // Illegal RLA
     lookup[0x23] = { "*RLA",2,&CPU6502::RLA,&CPU6502::IZX,8 };
     lookup[0x27] = { "*RLA",2,&CPU6502::RLA,&CPU6502::ZP0,5 };
     lookup[0x2F] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABS,6 };
@@ -318,7 +308,7 @@ CPU6502::CPU6502() {
     lookup[0x3B] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABY,7 };
     lookup[0x3F] = { "*RLA",3,&CPU6502::RLA,&CPU6502::ABX,7 };
 
-    // ---------- SRE ----------
+    // Illegal SRE
     lookup[0x43] = { "*SRE",2,&CPU6502::SRE,&CPU6502::IZX,8 };
     lookup[0x47] = { "*SRE",2,&CPU6502::SRE,&CPU6502::ZP0,5 };
     lookup[0x4F] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABS,6 };
@@ -327,7 +317,7 @@ CPU6502::CPU6502() {
     lookup[0x5B] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABY,7 };
     lookup[0x5F] = { "*SRE",3,&CPU6502::SRE,&CPU6502::ABX,7 };
 
-    // ---------- RRA ----------
+    // Illegal RRA
     lookup[0x63] = { "*RRA",2,&CPU6502::RRA,&CPU6502::IZX,8 };
     lookup[0x67] = { "*RRA",2,&CPU6502::RRA,&CPU6502::ZP0,5 };
     lookup[0x6F] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABS,6 };
@@ -336,7 +326,8 @@ CPU6502::CPU6502() {
     lookup[0x7B] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABY,7 };
     lookup[0x7F] = { "*RRA",3,&CPU6502::RRA,&CPU6502::ABX,7 };
 
-
+    // Illegal SBC immediate:
+    lookup[0xEB] = { "*SBC",2,&CPU6502::SBC,&CPU6502::IMM,2 };
 
     #pragma endregion
 }
