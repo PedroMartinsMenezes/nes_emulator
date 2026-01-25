@@ -863,10 +863,22 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "($%04X)", addr);
     }
     else if (mode == &CPU6502::IZX) {
-        snprintf(buf, sizeof(buf), "($%02X,X)", b1);
+        uint8_t zp_addr = b1;
+        uint8_t zp_ptr = (zp_addr + X) & 0xFF;
+        uint8_t lo = bus->cpuRead(zp_ptr, true);
+        uint8_t hi = bus->cpuRead((zp_ptr + 1) & 0xFF, true);
+        uint16_t ea = (hi << 8) | lo;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "($%02X,X) @ %02X = %04X = %02X", zp_addr, zp_ptr, ea, val);
     }
     else if (mode == &CPU6502::IZY) {
-        snprintf(buf, sizeof(buf), "($%02X),Y", b1);
+        uint8_t zp_addr = b1;
+        uint8_t lo = bus->cpuRead(zp_addr, true);
+        uint8_t hi = bus->cpuRead((zp_addr + 1) & 0xFF, true);
+        uint16_t base = (hi << 8) | lo;
+        uint16_t ea = base + Y;
+        uint8_t val = bus->cpuRead(ea, true);
+        snprintf(buf, sizeof(buf), "($%02X),Y = %04X @ %04X = %02X", zp_addr, base, ea, val);
     }
     else if (mode == &CPU6502::REL) {
         int8_t offset = static_cast<int8_t>(b1);
@@ -877,7 +889,7 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         buf[0] = '\0'; // IMP
     }
 
-    if (isMemoryOpcode(op)) {
+    if (isMemoryOpcode(op) && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
         uint16_t ea = computeEffectiveAddressForLog(pc);
         uint8_t value = bus->cpuRead(ea, true);
         char tmp[8];
