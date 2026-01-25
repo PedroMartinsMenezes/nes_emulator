@@ -258,6 +258,15 @@ CPU6502::CPU6502() {
     lookup[0xDC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
     lookup[0xFC] = { "*NOP", 3, &CPU6502::NOP1, &CPU6502::ABX, 4 };
 
+    // --- Illegal LAX ---
+    lookup[0xA3] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::IZX, 6 };
+    lookup[0xA7] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::ZP0, 3 };
+    lookup[0xAF] = { "*LAX", 3, &CPU6502::LAX, &CPU6502::ABS, 4 };
+    lookup[0xB3] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::IZY, 5 };
+    lookup[0xB7] = { "*LAX", 2, &CPU6502::LAX, &CPU6502::ZPY, 4 };
+    lookup[0xBF] = { "*LAX", 3, &CPU6502::LAX, &CPU6502::ABY, 4 };
+
+
     #pragma endregion
 }
 
@@ -790,11 +799,6 @@ uint8_t CPU6502::NOP() {
     return 0;
 }
 
-uint8_t CPU6502::NOP1() {
-    return 1;   // pretend it is a read instruction for timing
-}
-
-
 //Return from Interrupt
 uint8_t CPU6502::RTI() {
     P = pull();
@@ -811,6 +815,24 @@ uint8_t CPU6502::RTI() {
 }
 
 #pragma endregion
+
+#pragma region Illegal Instructions
+
+uint8_t CPU6502::NOP1() {
+    return 1;   // pretend it is a read instruction for timing
+}
+
+uint8_t CPU6502::LAX() {
+    fetch();
+    A = fetched;
+    X = fetched;
+    setFlag(Z, A == 0);
+    setFlag(N, A & 0x80);
+    return 1;
+}
+
+#pragma endregion
+
 
 std::string CPU6502::flagsToString() const {
     return std::string{

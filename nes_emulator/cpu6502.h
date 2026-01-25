@@ -124,8 +124,11 @@ private:
     // System Functions
     uint8_t BRK();
     uint8_t NOP();
-    uint8_t NOP1();
     uint8_t RTI();
+    
+    //Illegal Instructions
+    uint8_t NOP1();
+    uint8_t LAX();
 
 private: //Inner Types
 
