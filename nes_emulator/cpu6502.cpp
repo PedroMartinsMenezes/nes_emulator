@@ -859,8 +859,16 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "$%04X,Y", addr);
     }
     else if (mode == &CPU6502::IND) {
-        uint16_t addr = (b2 << 8) | b1;
-        snprintf(buf, sizeof(buf), "($%04X)", addr);
+        uint16_t ptr = (b2 << 8) | b1;
+        uint8_t lo = bus->cpuRead(ptr, true);
+        uint8_t hi;
+        // Emulate 6502 indirect JMP page-wrap bug
+        if ((ptr & 0x00FF) == 0x00FF)
+            hi = bus->cpuRead(ptr & 0xFF00, true);
+        else
+            hi = bus->cpuRead(ptr + 1, true);
+        uint16_t target = (hi << 8) | lo;
+        snprintf(buf, sizeof(buf), "($%04X) = %04X", ptr, target);
     }
     else if (mode == &CPU6502::IZX) {
         uint8_t zp_addr = b1;
@@ -889,14 +897,6 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         buf[0] = '\0'; // IMP
     }
 
-    if (isMemoryOpcode(op) && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
-        uint16_t ea = computeEffectiveAddressForLog(pc);
-        uint8_t value = bus->cpuRead(ea, true);
-        char tmp[8];
-        snprintf(tmp, sizeof(tmp), " = %02X", value);
-        return std::string(buf) + tmp;
-    }
-
     // Accumulator addressing (nestest formatting)
     if (lookup[op].addrmode == &CPU6502::IMP) {
         auto fn = lookup[op].operate;
@@ -907,6 +907,14 @@ std::string CPU6502::formatOperand(uint16_t pc) {
             fn == &CPU6502::ROR) {
             return "A";
         }
+    }
+
+    if (isMemoryOpcode(op) && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
+        uint16_t ea = computeEffectiveAddressForLog(pc);
+        uint8_t value = bus->cpuRead(ea, true);
+        char tmp[8];
+        snprintf(tmp, sizeof(tmp), " = %02X", value);
+        return std::string(buf) + tmp;
     }
 
     return std::string(buf);
