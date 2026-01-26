@@ -1,9 +1,31 @@
 #include "ppu2c02.h"
+#include <iostream>
 
 
 PPU2C02::PPU2C02() {
     
 }
+
+void PPU2C02::reset()
+{
+    PPUCTRL = 0;
+    PPUMASK = 0;
+    PPUSTATUS = 0;
+
+    vram_addr = 0;
+    tram_addr = 0;
+    fine_x = 0;
+    write_latch = false;
+
+    data_buffer = 0;
+
+    scanline = 0;
+    cycle = 0;
+    frame = 0;
+
+    nmi = false;
+}
+
 
 uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly) {
     uint8_t data = 0x00;
@@ -134,6 +156,9 @@ void PPU2C02::clock()
         }
     }
 
+    if (scanline == 241 && cycle == 1)
+        printf("NMI\n");
+
     // VBlank start
     if (scanline == 241 && cycle == 1)
     {
@@ -149,4 +174,6 @@ void PPU2C02::clock()
         PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteZero;
         PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteOverflow;
     }
+
+
 }

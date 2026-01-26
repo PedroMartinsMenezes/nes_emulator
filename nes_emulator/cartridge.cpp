@@ -42,6 +42,13 @@ Cartridge::Cartridge(const std::string& romPath) {
     ifs.read(reinterpret_cast<char*>(prgROM.data()), prgROM.size());
 }
 
+void Cartridge::reset()
+{
+    //if (mapper)
+    //    mapper->reset();
+}
+
+
 bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
     if (addr >= 0x8000) {
         if (prgBanks == 1) {

@@ -22,6 +22,9 @@
     <Filter Include="bus">
       <UniqueIdentifier>{c0617343-a92d-46d3-9259-4734fc74467a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nes">
+      <UniqueIdentifier>{0f3f4a41-ffa9-473c-8dbf-a3c6f5755a2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu6502.cpp">
@@ -43,6 +46,9 @@
     <ClCompile Include="bus.cpp">
       <Filter>bus</Filter>
     </ClCompile>
+    <ClCompile Include="nes.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu6502.h">
@@ -62,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="bus.h">
       <Filter>bus</Filter>
+    </ClInclude>
+    <ClInclude Include="nes.h">
+      <Filter>nes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

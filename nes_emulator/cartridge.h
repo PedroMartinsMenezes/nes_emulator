@@ -7,6 +7,8 @@ class Cartridge {
 public:
     Cartridge(const std::string& romPath);
 
+    void reset();
+
     bool cpuRead(uint16_t addr, uint8_t& data);
 
     bool cpuWrite(uint16_t addr, uint8_t data);
