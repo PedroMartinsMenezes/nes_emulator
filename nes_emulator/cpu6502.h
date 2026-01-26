@@ -185,10 +185,13 @@ public: //Inner Variables
     uint8_t  cycles = 0;
 
     // Registers - https://www.nesdev.org/obelisk-6502-guide/registers.html
-    uint16_t PC         = 0x0000;   //Program Counter
-    uint8_t  SP         = 0xFD;     //Stack Pointer
-    uint8_t  A          = 0;        //Accumulator
-    uint8_t  X          = 0;        //Index Register X
-    uint8_t  Y          = 0;        //Index Register Y
-    uint8_t  P          = 0x24;     //Processor Status
+    uint16_t PC         = 0x0000;   // Program Counter
+    uint8_t  SP         = 0xFD;     // Stack Pointer
+    uint8_t  A          = 0;        // Accumulator
+    uint8_t  X          = 0;        // Index Register X
+    uint8_t  Y          = 0;        // Index Register Y
+    uint8_t  P          = 0x24;     // Processor Status
+
+    //Stall
+    uint16_t stall      = 0;        // ?
 };
