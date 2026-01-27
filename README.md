@@ -8,15 +8,15 @@ See bBelow the features implemented.
 
 * CPU (6502)
     - [x] Official opcodes
-    - [ ] Unofficial opcodes
-    - [ ] Cycle accuracy (official & unofficial)
-    - [ ] Dummy reads/writes
-    - [ ] BCD arithmetic (Not needed by NES anyway)
+    - [x] Unofficial opcodes
+    - [x] Cycle accuracy (official & unofficial)
+    - [x] Dummy reads/writes
+    - [x] BCD arithmetic (Not needed by NES anyway)
 * Memory
     - [ ] Battery backed (persistent) save RAM
     - [ ] Open-bus
 * PPU (Picture Processing Unit)
-    - [ ] Open-bus
+    - [x] Open-bus
     - [ ] NTSC
     - [ ] PAL
     - [ ] Dendy
