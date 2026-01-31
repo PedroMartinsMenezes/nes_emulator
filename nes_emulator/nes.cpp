@@ -15,29 +15,45 @@ void NES::reset()
     systemClockCounter = 0;
 
     // Reset all components
-    cpu.reset();
+    cart.reset();
     ppu.reset();
     apu.reset();
-
-    // Reset cartridge mapper
-    cart.reset();
+    cpu.reset();
 }
 
 
 void NES::clock()
 {
-    // PPU runs 3x faster than CPU
-    ppu.clock();
-    ppu.clock();
+    // PPU always clocks
     ppu.clock();
 
-    cpu.clock();
+    // CPU & APU clock every 3 PPU cycles
+    if (systemClockCounter % 3 == 0)
+    {
+        if (bus.dmaActive)
+        {
+            bus.clockDMA(); // steals CPU cycles
+        }
+        else
+        {
+            cpu.clock();
+        }
 
-    // Trigger NMI if PPU requests it
+        apu.clock();
+    }
+
+    // Handle NMI
     if (ppu.nmi)
     {
         ppu.nmi = false;
         cpu.nmi();
     }
-}
 
+    // Handle IRQs
+    if (apu.irq || cart.irq)
+    {
+        cpu.irq();
+    }
+
+    systemClockCounter++;
+}
