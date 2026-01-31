@@ -13,6 +13,8 @@ public:
 
     bool cpuWrite(uint16_t addr, uint8_t data);
 
+    bool irq = false;
+
 private:
     // PRG ROM
     std::vector<uint8_t> prgROM;
