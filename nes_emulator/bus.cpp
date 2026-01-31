@@ -74,3 +74,7 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
         cart->cpuWrite(addr, data);
 }
 
+void Bus::clockDMA() {
+    //TODO Incomplete
+}
+

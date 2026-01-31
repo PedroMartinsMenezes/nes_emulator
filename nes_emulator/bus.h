@@ -14,7 +14,9 @@ public:
 
     void    cpuWrite(uint16_t addr, uint8_t data);
 
-public: //Inner Variables
+    void    clockDMA();
+
+public:
 
     // Devices
     CPU6502* cpu = nullptr;     //Central Processing Unit
@@ -26,4 +28,6 @@ public: //Inner Variables
 
     // Test Mode (used for testing)
     bool nestestMode = false;
+
+    bool dmaActive = false;
 };
