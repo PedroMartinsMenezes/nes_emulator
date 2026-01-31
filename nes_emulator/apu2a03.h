@@ -10,4 +10,9 @@ public:
     void    cpuWrite(uint16_t addr, uint8_t data);
 
     void    reset();
+
+    void    clock();
+
+public:
+    bool    irq = false;
 };
