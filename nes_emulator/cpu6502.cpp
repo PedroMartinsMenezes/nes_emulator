@@ -523,13 +523,17 @@ uint8_t CPU6502::IND() {
     uint16_t ptr_lo = read(PC++);
     uint16_t ptr_hi = read(PC++);
     uint16_t ptr = (ptr_hi << 8) | ptr_lo;
-    uint16_t lo = read(ptr);
+    
+    uint16_t address1 = ptr;
+    uint16_t address2 = ptr + 1;
+
     // Hardware bug emulation
-    uint16_t hi;
     if ((ptr & 0x00FF) == 0x00FF)
-        hi = read(ptr & 0xFF00);
-    else
-        hi = read(ptr + 1);
+        address2 = ptr & 0xFF00;
+
+    uint8_t lo = read(address1);
+    uint8_t hi = read(address2);
+
     addr_abs = (hi << 8) | lo;
     return 0;
 }
