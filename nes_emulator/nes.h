@@ -4,11 +4,14 @@
 #include "apu2a03.h"
 #include "cartridge.h"
 #include "bus.h"
+#include <fstream>
+#include <string>
 
 class NES 
 {
 public:
     NES(const std::string& romPath);
+    ~NES();
 
     void reset();
     void clock();
@@ -19,6 +22,10 @@ public:
     Cartridge cart;
     Bus bus;
 
+    std::ofstream log;
+
 private:
     uint64_t systemClockCounter = 0;
+
+    void open_log(const std::string& romPath);
 };
