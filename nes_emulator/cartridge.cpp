@@ -1,72 +1,100 @@
 #include "cartridge.h"
 #include <fstream>
 #include <iostream>
+#include <cassert>
+#include <fstream>
+#include <cstring>
+#include "Cartridge.h"
+#include "mapper1_mmc1.h"
 
-Cartridge::Cartridge(const std::string& romPath) {
-    std::ifstream ifs(romPath, std::ifstream::binary);
 
-    if (!ifs) {
-        throw std::runtime_error("Failed to open ROM");
-    }
+Cartridge::Cartridge(const std::string& romPath)
+{
+    std::ifstream file(romPath, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("Failed to open the NES file " + romPath);
 
-    // Read iNES header
-    struct Header {
-        char name[4];
-        uint8_t prgChunks;
-        uint8_t chrChunks;
-        uint8_t flags6;
-        uint8_t flags7;
-        uint8_t flags8;
-        uint8_t flags9;
-        uint8_t flags10;
-        uint8_t padding[5];
-    } header{};
+    INesHeader header{};
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
 
-    ifs.read(reinterpret_cast<char*>(&header), sizeof(Header));
+    // Validate iNES signature
+    if (std::strncmp(header.name, "NES\x1A", 4) != 0)
+        return;
 
-    if (header.name[0] != 'N' ||
-        header.name[1] != 'E' ||
-        header.name[2] != 'S') {
-        throw std::runtime_error("Invalid iNES file");
-    }
-
-    prgBanks = header.prgChunks;
+    bool hasTrainer = header.flags6 & 0x04;
 
     // Skip trainer if present
-    if (header.flags6 & 0x04) {
-        ifs.seekg(512, std::ios_base::cur);
+    if (hasTrainer)
+        file.seekg(512, std::ios::cur);
+
+    // --- Load PRG-ROM ---
+    const size_t prgSize = header.prgChunks * 16 * 1024;
+    prgROM.resize(prgSize);
+    file.read(reinterpret_cast<char*>(prgROM.data()), prgSize);
+
+    // --- Load CHR ---
+    bool chrIsRam = (header.chrChunks == 0);
+
+    if (chrIsRam)
+    {
+        chrRAM.resize(8 * 1024);
+    }
+    else
+    {
+        const size_t chrSize = header.chrChunks * 8 * 1024;
+        chrROM.resize(chrSize);
+        file.read(reinterpret_cast<char*>(chrROM.data()), chrSize);
     }
 
-    // Read PRG ROM
-    prgROM.resize(prgBanks * 16384);
-    ifs.read(reinterpret_cast<char*>(prgROM.data()), prgROM.size());
+    // --- Mapper number ---
+    uint8_t mapperId =
+        (header.flags7 & 0xF0) |
+        (header.flags6 >> 4);
+
+    switch (mapperId)
+    {
+    case 1: // MMC1
+        mapper = std::make_unique<Mapper1>(
+            header.prgChunks,
+            header.chrChunks,
+            prgROM,
+            chrIsRam ? chrRAM : chrROM,
+            chrIsRam
+        );
+        break;
+
+    default:
+        // Unsupported mapper
+        return;
+    }
+
+    valid = true;
 }
 
-void Cartridge::reset()
+// ------------------------------------------------------------
+// CPU interface
+// ------------------------------------------------------------
+
+bool Cartridge::cpuRead(uint16_t addr, uint8_t& data)
 {
-    //if (mapper)
-    //    mapper->reset();
+    return mapper && mapper->cpuRead(addr, data);
 }
 
-
-bool Cartridge::cpuRead(uint16_t addr, uint8_t& data) {
-    if (addr >= 0x8000) {
-        if (prgBanks == 1) {
-            // 16KB mirrored
-            data = prgROM[addr & 0x3FFF];
-        }
-        else {
-            // 32KB direct
-            data = prgROM[addr & 0x7FFF];
-        }
-        return true;
-    }
-    return false;
+bool Cartridge::cpuWrite(uint16_t addr, uint8_t data)
+{
+    return mapper && mapper->cpuWrite(addr, data);
 }
 
-bool Cartridge::cpuWrite(uint16_t addr, uint8_t data) {
-    // NROM has no writable PRG
-    // Later: mapper registers go here
-    return false;
+// ------------------------------------------------------------
+// PPU interface
+// ------------------------------------------------------------
+
+bool Cartridge::ppuRead(uint16_t addr, uint8_t& data)
+{
+    return mapper && mapper->ppuRead(addr, data);
 }
 
+bool Cartridge::ppuWrite(uint16_t addr, uint8_t data)
+{
+    return mapper && mapper->ppuWrite(addr, data);
+}

@@ -49,6 +49,9 @@
     <ClCompile Include="nes.cpp">
       <Filter>nes</Filter>
     </ClCompile>
+    <ClCompile Include="mapper1_mmc1.cpp">
+      <Filter>mapper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu6502.h">
@@ -71,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="nes.h">
       <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="mapper1_mmc1.h">
+      <Filter>mapper</Filter>
+    </ClInclude>
+    <ClInclude Include="IMapper.h">
+      <Filter>mapper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

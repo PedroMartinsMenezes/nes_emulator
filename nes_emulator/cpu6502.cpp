@@ -972,6 +972,9 @@ uint8_t CPU6502::peek(uint16_t addr) {
 }
 
 void CPU6502::logState(std::ofstream& log) {
+
+    static uint32_t max_lines = 0;
+
     uint16_t pc = PC;
 
     uint8_t op = peek(pc);
@@ -1014,6 +1017,13 @@ void CPU6502::logState(std::ofstream& log) {
     );
 
     log << buffer << "\n";
+
+    //@@@
+    if (max_lines++ > 10000)
+    {
+        log.close();
+        exit(0);
+    }
 }
 
 std::string CPU6502::formatOperand(uint16_t pc) {

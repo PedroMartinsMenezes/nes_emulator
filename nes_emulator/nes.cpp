@@ -32,7 +32,7 @@ void NES::reset() {
     // Reset system clock counter (optional but recommended)
     systemClockCounter = 0;
     // Reset all components
-    cart.reset();
+    //cart.reset();
     ppu.reset();
     apu.reset();
     cpu.reset();
