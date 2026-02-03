@@ -156,8 +156,8 @@ void PPU2C02::clock()
         }
     }
 
-    if (scanline == 241 && cycle == 1)
-        printf("NMI\n");
+    //if (scanline == 241 && cycle == 1)
+    //    printf("NMI\n");
 
     // VBlank start
     if (scanline == 241 && cycle == 1)
