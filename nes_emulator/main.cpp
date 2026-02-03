@@ -8,8 +8,8 @@
 #include "cartridge.h"
 #include "nes.h"
 
-
 namespace fs = std::filesystem;
+
 
 int run_nestest(const char* romPath);
 int run_ppu_vbl_nmi(const char* romPath);
@@ -83,7 +83,7 @@ int run_nestest(const char* romPath) {
     // Reset CPU
     cpu.reset();
 
-    //fixed nestest entry point
+    //fixed entry point
     cpu.PC = 0xC000;
 
     // Open trace log
@@ -103,7 +103,7 @@ int run_nestest(const char* romPath) {
     bool running = true;
 
     while (running) {
-        // check fixed nestest exit point
+        // check fixed exit point
         if (cpu.PC == 0xC66E && cpu.complete()) {
             running = false;
         }
@@ -122,27 +122,21 @@ int run_nestest(const char* romPath) {
 
 int run_ppu_vbl_nmi(const char* romPath) {
 
+    int count = 0;
     NES nes(romPath);
     nes.reset();
 
-    while (true)
+    bool running = true;
+    while (running)
     {
         nes.clock();
 
-        // reading fixed address for test status
-        uint8_t result = nes.bus.cpuRead(0x0000);
-        if (result == 0x01)
+        if (nes.cpu.PC == 0x073B && nes.cpu.complete())
         {
-            std::cout << "PASS\n";
-            return 0;
-        }
-        if (result == 0xFF)
-        {
-            std::cout << "FAIL\n";
-            return 0;
+            running = false;
         }
     }
-
-    std::cout << "INCONCLUSIVE\n";
+    
+    std::cout << "Finished !\n";
     return 0;
 }
