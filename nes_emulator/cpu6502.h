@@ -182,7 +182,7 @@ public: //Inner Variables
     uint16_t addr_abs   = 0x0000;
     uint16_t addr_rel   = 0x0000;
     uint8_t  opcode     = 0x00;    
-    uint8_t  cycles = 0;
+    uint8_t  cycles     = 0;
 
     // Registers - https://www.nesdev.org/obelisk-6502-guide/registers.html
     uint16_t PC         = 0x0000;   // Program Counter
