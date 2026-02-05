@@ -1124,13 +1124,23 @@ std::string CPU6502::formatOperand(uint16_t pc) {
 
     if (isMemoryOpcode(op) && mode != &CPU6502::IMP && mode != &CPU6502::IMM && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
         uint16_t ea = computeEffectiveAddressForLog(pc);
-        uint8_t value = bus->cpuRead(ea, true);
+        uint8_t value = getEffectiveValueForLog(ea);
         char tmp[8];
         snprintf(tmp, sizeof(tmp), " = %02X", value);
         return std::string(buf) + tmp;
     }
 
     return std::string(buf);
+}
+
+uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) {
+    if (effectiveAddress == 0x2000)
+        return 0xFF;
+    else if (effectiveAddress == 0x2001)
+        return 0xFF;
+    else if (effectiveAddress == 0x2002)
+        return 0xFF;
+    return bus->cpuRead(effectiveAddress, true);
 }
 
 bool CPU6502::isMemoryOpcode(uint8_t op) const {

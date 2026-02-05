@@ -171,6 +171,7 @@ public:
     std::string formatOperand(uint16_t pc);
     uint8_t peek(uint16_t addr);
     uint16_t computeEffectiveAddressForLog(uint16_t pc);
+    uint8_t getEffectiveValueForLog(uint16_t effectiveAddress);
 
 public: //Inner Variables
 

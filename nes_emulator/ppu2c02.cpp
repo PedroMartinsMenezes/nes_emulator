@@ -29,7 +29,7 @@ void PPU2C02::reset()
 // https://www.nesdev.org/wiki/PPU_registers
 uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly) 
 {
-    uint8_t data = 0xFF;
+    uint8_t data = 0x00;
 
     switch (addr & 7)
     {
