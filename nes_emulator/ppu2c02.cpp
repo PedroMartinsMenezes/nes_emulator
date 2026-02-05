@@ -143,6 +143,7 @@ void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
 
 void PPU2C02::clock()
 {
+    // Advance PPU timing
     cycle++;
 
     if (cycle >= 341)
@@ -157,24 +158,29 @@ void PPU2C02::clock()
         }
     }
 
-    //if (scanline == 241 && cycle == 1)
-    //    printf("NMI\n");
-
-    // VBlank start
+    // ============================
+    // VBlank start (scanline 241, cycle 1)
+    // ============================
     if (scanline == 241 && cycle == 1)
     {
         PPUSTATUS |= (uint8_t)PPU_Status::VBlank;
-        if (PPUCTRL & (uint8_t)PPU_Status::VBlank)
+
+        // NMI enable is bit 7 of PPUCTRL
+        if (PPUCTRL & 0x80)
+        {
             nmi = true;
+        }
     }
 
-    // VBlank end
+    // ============================
+    // Pre-render line (scanline 261, cycle 1)
+    // Clear VBlank and sprite flags
+    // ============================
     if (scanline == 261 && cycle == 1)
     {
         PPUSTATUS &= ~(uint8_t)PPU_Status::VBlank;
         PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteZero;
         PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteOverflow;
     }
-
-
 }
+

@@ -997,7 +997,7 @@ void CPU6502::logState(std::ofstream& log) {
     uint64_t cyc = totalCycles - 1;
 
     int ppuX = (int)(cyc * 3) % 341;
-    int ppuY = (int)(cyc * 3) / 341;
+    int ppuY = ((int)(cyc * 3) / 341) % 262;
 
     char prefix[2] = " ";
     if (lookup[op].name[0] == '*')
