@@ -1023,7 +1023,7 @@ void CPU6502::logState(std::ofstream& log) {
     log << buffer << "\n";
 
     //@@@
-    if (max_lines++ > 10000)
+    if (max_lines++ > 100000)
     {
         log.close();
         exit(0);
@@ -1139,6 +1139,10 @@ uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) {
     else if (effectiveAddress == 0x2001)
         return 0xFF;
     else if (effectiveAddress == 0x2002)
+        return 0xFF;
+    else if (effectiveAddress == 0x2006)
+        return 0xFF;
+    else if (effectiveAddress == 0x2007)
         return 0xFF;
     return bus->cpuRead(effectiveAddress, true);
 }
