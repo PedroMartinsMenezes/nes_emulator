@@ -34,7 +34,8 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
     switch (addr & 7)
     {
     case 2: // $2002
-        data = (PPUSTATUS & 0xE0) | (data_buffer & 0x1F);
+        //reading bits 7,6,5 from PpuStatus and bits 4,3,2,1,0 from OpenBus (CpuDataBus)
+        data = (PPUSTATUS & 0xE0) | (cpuDataBus & 0x1F);
         PPUSTATUS &= ~0x80;
         write_latch = false;
         break;
@@ -141,6 +142,11 @@ void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
         tblPalette[addr & 0x1F] = data;
 }
 
+void PPU2C02::setCpuDataBus(uint8_t data)
+{
+    cpuDataBus = data;
+}
+
 void PPU2C02::clock()
 {
     // Advance PPU timing
@@ -163,7 +169,7 @@ void PPU2C02::clock()
     // ============================
     if (scanline == 241 && cycle == 1)
     {
-        PPUSTATUS |= (uint8_t)PPU_Status::VBlank;
+        PPUSTATUS |= 0x80; //Set VBlank
 
         // NMI enable is bit 7 of PPUCTRL
         if (PPUCTRL & 0x80)

@@ -642,7 +642,13 @@ uint8_t CPU6502::EOR() { fetch(); A ^= fetched; setFlag(Z, A == 0); setFlag(N, A
 uint8_t CPU6502::ORA() { fetch(); A |= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
 
 //Test Bits
-uint8_t CPU6502::BIT() { fetch(); setFlag(Z, (A & fetched) == 0); setFlag(V, fetched & 0x40); setFlag(N, fetched & 0x80); return 0; }
+uint8_t CPU6502::BIT() { 
+    fetch(); 
+    setFlag(Z, (A & fetched) == 0); 
+    setFlag(V, fetched & 0x40); 
+    setFlag(N, fetched & 0x80); 
+    return 0; 
+}
 
 #pragma endregion
 

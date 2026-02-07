@@ -13,6 +13,7 @@ public:
     void    clock();
     uint8_t ppuRead(uint16_t addr);
     void    ppuWrite(uint16_t addr, uint8_t data);
+    void    setCpuDataBus(uint8_t data);
 
     uint16_t cycle      = 0;        // dot (0–340)
     uint16_t scanline   = 0;        // 0–261
@@ -31,7 +32,7 @@ public:
     uint8_t fine_x      = 0;        // Fine X scroll
     bool write_latch    = false;    // Toggle for $2005 / $2006
 
-    uint8_t data_buffer = 0;        // PPU read buffer
+    uint8_t data_buffer = 0;        // PPU read buffer (used by $2007)
 
     // Pattern Tables
     // Each tile is 8x8 pixels of 2bits = 16 bytes
@@ -102,6 +103,9 @@ public:
     // | 1–0 | Palette select                  | 
     // +-----+---------------------------------+
     uint8_t sprite_attr[8];
+
+
+    uint8_t cpuDataBus = 0x00;
 
     enum class PPU_Status : uint8_t {
         SpriteOverflow  = 0x20,
