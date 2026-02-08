@@ -147,6 +147,12 @@ void PPU2C02::setCpuDataBus(uint8_t data)
     cpuDataBus = data;
 }
 
+void PPU2C02::clocks(int cpuCycles) {
+    for (int i = 0; i < cpuCycles * 3; i++) {
+        clock();
+    }
+}
+
 void PPU2C02::clock()
 {
     // Advance PPU timing

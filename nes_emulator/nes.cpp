@@ -40,28 +40,73 @@ void NES::reset() {
 
 void NES::clock()
 {
-    ppu.clock();
-    if (systemClockCounter % 3 == 0) 
+    if (bus.dmaActive)
     {
-        if (bus.dmaActive)
+        bus.clockDMA();
+    }
+    else
+    {
+        #pragma region CPU Clock (cpu.clock()))
+        if (cpu.cycles == 0)
         {
-            bus.clockDMA();
+            #pragma region Checking the PPU cycles
+            uint64_t cyc = cpu.totalCycles;
+            int ppuX = (int)(cyc * 3) % 341;
+            int ppuY = ((int)(cyc * 3) / 341) % 262;
+            if (ppuX != ppu.cycle || ppuY != ppu.scanline)
+            {
+                exit(0);
+            }
+            #pragma  endregion
+
+            cpu.logState(log);
+
+            cpu.opcode = cpu.read(cpu.PC++);
+
+            auto& inst = cpu.lookup[cpu.opcode];
+
+            cpu.totalCycles += inst.cycles;
+
+            ppu.clocks(inst.cycles);
+
+            bool extraCycles1 = (cpu.*inst.addrmode)() == 1;
+
+            bool extraCycles2 = (cpu.*inst.operate)() == 1;
+
+            uint8_t extraCycle = (extraCycles1 && extraCycles2) ? 1 : 0;
+
+            cpu.cycles += extraCycle;
+            cpu.totalCycles += cpu.cycles;
+
+            ppu.clocks(cpu.cycles);
+
+            if (cpu.cycles > 0)
+                cpu.cycles--;
         }
         else
         {
-            cpu.clock();
-            if (cpu.complete())
+            ppu.clock();
+            ppu.clock();
+            ppu.clock();
+
+            cpu.totalCycles++;
+
+            if (cpu.cycles > 0)
+                cpu.cycles--;
+        }
+        #pragma endregion
+
+        
+
+        if (cpu.complete())
+        {
+            if (ppu.nmi)
             {
-                if (ppu.nmi)
-                {
-                    ppu.nmi = false;
-                    cpu.nmi();
-                }
-                cpu.logState(log);
+                ppu.nmi = false;
+                cpu.nmi();
             }
         }
-        apu.clock();
     }
-    systemClockCounter++;
+    apu.clock();
 }
 

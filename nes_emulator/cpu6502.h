@@ -22,7 +22,6 @@ public:
     // Test Mode (used for testing)
     bool nestestMode = false;
 
-private:
     enum FLAGS;
 
     //Helpers
@@ -137,7 +136,6 @@ private:
     uint8_t SRE();
     uint8_t RRA();
 
-private: //Inner Types
 
     enum FLAGS {
         C = 0x01,   // Carry Flag

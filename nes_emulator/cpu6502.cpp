@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstdio>
 #include <sstream>
+#include <iostream>
 
 
 #pragma region Constructor
@@ -220,7 +221,7 @@ CPU6502::CPU6502() {
     lookup[0x9A] = { "TXS", 1, &CPU6502::TXS, &CPU6502::IMP, 2 };
     lookup[0x98] = { "TYA", 1, &CPU6502::TYA, &CPU6502::IMP, 2 };
 
-    #pragma region Illegal NOP entries
+#pragma region Illegal NOP entries
 
     //Illegal immediate NOP
     lookup[0x80] = { "*NOP", 2, &CPU6502::NOP, &CPU6502::IMM, 2 };
@@ -328,7 +329,7 @@ CPU6502::CPU6502() {
     // Illegal SBC immediate:
     lookup[0xEB] = { "*SBC",2,&CPU6502::SBC,&CPU6502::IMM,2 };
 
-    #pragma endregion
+#pragma endregion
 }
 
 #pragma endregion
@@ -386,7 +387,7 @@ void CPU6502::reset() {
     uint16_t hi = read(addr_abs + 1);
     PC = (hi << 8) | lo;
 
-    cycles = 8;
+    cycles = 7;
 }
 
 // Interrupt Request
@@ -424,7 +425,7 @@ void CPU6502::nmi() {
     uint16_t hi = read(addr_abs + 1);
     PC = (hi << 8) | lo;
 
-    cycles = 8;
+    cycles = 7;
 }
 
 void CPU6502::clock() {
@@ -513,9 +514,8 @@ uint8_t CPU6502::ABY() {
     uint16_t hi = read(PC++);
     uint16_t base = (hi << 8) | lo;
     addr_abs = base + Y;
-    if ((addr_abs & 0xFF00) != (base & 0xFF00))
-        return 1;
-    return 0;
+    // Page crossed?
+    return ((addr_abs & 0xFF00) != (base & 0xFF00)) ? 1 : 0;
 }
 
 //Indirect
@@ -523,7 +523,7 @@ uint8_t CPU6502::IND() {
     uint16_t ptr_lo = read(PC++);
     uint16_t ptr_hi = read(PC++);
     uint16_t ptr = (ptr_hi << 8) | ptr_lo;
-    
+
     uint16_t address1 = ptr;
     uint16_t address2 = ptr + 1;
 
@@ -642,12 +642,12 @@ uint8_t CPU6502::EOR() { fetch(); A ^= fetched; setFlag(Z, A == 0); setFlag(N, A
 uint8_t CPU6502::ORA() { fetch(); A |= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
 
 //Test Bits
-uint8_t CPU6502::BIT() { 
-    fetch(); 
-    setFlag(Z, (A & fetched) == 0); 
-    setFlag(V, fetched & 0x40); 
-    setFlag(N, fetched & 0x80); 
-    return 0; 
+uint8_t CPU6502::BIT() {
+    fetch();
+    setFlag(Z, (A & fetched) == 0);
+    setFlag(V, fetched & 0x40);
+    setFlag(N, fetched & 0x80);
+    return 0;
 }
 
 #pragma endregion
@@ -1000,7 +1000,7 @@ void CPU6502::logState(std::ofstream& log) {
     std::string operand = formatOperand(pc);
 
     // nestest logs cycles at instruction START
-    uint64_t cyc = totalCycles - 1;
+    uint64_t cyc = totalCycles; //@@@ - 1
 
     int ppuX = (int)(cyc * 3) % 341;
     int ppuY = ((int)(cyc * 3) / 341) % 262;
@@ -1025,6 +1025,11 @@ void CPU6502::logState(std::ofstream& log) {
         ppuY, ppuX,
         cyc
     );
+
+    /*if (max_lines < 10 || cyc == 27394 || cyc == 206076 || cyc == 206080)
+    {
+        std::cout << buffer << "\n";
+    }*/
 
     log << buffer << "\n";
 
