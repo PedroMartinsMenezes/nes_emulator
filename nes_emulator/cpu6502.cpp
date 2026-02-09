@@ -1148,22 +1148,10 @@ std::string CPU6502::formatOperand(uint16_t pc) {
 }
 
 uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) {
-    if (effectiveAddress == 0x2000)
+
+    if (effectiveAddress >= 0x2000 && effectiveAddress <= 0x3FFF)
         return 0xFF;
-    else if (effectiveAddress == 0x2001)
-        return 0xFF;
-    else if (effectiveAddress == 0x2002)
-        return 0xFF;
-    else if (effectiveAddress == 0x2003)
-        return 0xFF;
-    else if (effectiveAddress == 0x2004)
-        return 0xFF;
-    else if (effectiveAddress == 0x2005)
-        return 0xFF;
-    else if (effectiveAddress == 0x2006)
-        return 0xFF;
-    else if (effectiveAddress == 0x2007)
-        return 0xFF;
+    
     return bus->cpuRead(effectiveAddress, true);
 }
 
