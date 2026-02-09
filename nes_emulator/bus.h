@@ -30,6 +30,4 @@ public:
     bool nestestMode = false;
 
     bool dmaActive = false;
-
-    uint8_t cpuDataBus = 0x00;
 };

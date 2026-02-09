@@ -35,13 +35,24 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
     {
     case 2: // $2002
         //reading bits 7,6,5 from PpuStatus and bits 4,3,2,1,0 from OpenBus (CpuDataBus)
-        data = (PPUSTATUS & 0xE0) | (cpuDataBus & 0x1F);
-        PPUSTATUS &= ~0x80;
         write_latch = false;
+        data = (PPUSTATUS & 0xE0) | (cpuDataBus & 0x1F);
+        if (data & 0x80)
+            PPUSTATUS &= 0x60;
+        // race conditions
+        if (scanline == 241)
+        {
+            if ((cycle == 0))
+                data &= ~0x80; //unset VBlank
+            if (cycle < 3)
+                nmi = false;
+        }
+        cpuDataBus = data;
         break;
 
     case 4: // $2004
         data = 0x00; // sprites later
+        cpuDataBus = data;
         break;
 
     case 7: // $2007
@@ -59,6 +70,9 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
 }
 
 void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
+
+    cpuDataBus = data;
+    
     switch (addr & 7)
     {
     case 0: // $2000
@@ -142,11 +156,6 @@ void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
         tblPalette[addr & 0x1F] = data;
 }
 
-void PPU2C02::setCpuDataBus(uint8_t data)
-{
-    cpuDataBus = data;
-}
-
 void PPU2C02::clocks(int cpuCycles) {
     for (int i = 0; i < cpuCycles * 3; i++) {
         clock();
@@ -158,36 +167,25 @@ void PPU2C02::clock()
     // Advance PPU timing
     cycle++;
 
-    if (cycle >= 341)
+    if (cycle == 341)
     {
         cycle = 0;
         scanline++;
 
-        if (scanline >= 262)
+        if (scanline == 241) // VBlank start
+        {
+            PPUSTATUS |= 0x80; //Set VBlank
+            nmi = (PPUCTRL & 0x80) > 0; // Enable NMI if PPUCTRL has bit 7 set
+        }
+        else if (scanline >= 262)
         {
             scanline = 0;
             frame++;
         }
     }
 
-    // ============================
-    // VBlank start (scanline 241, cycle 1)
-    // ============================
-    if (scanline == 241 && cycle == 1)
-    {
-        PPUSTATUS |= 0x80; //Set VBlank
-
-        // NMI enable is bit 7 of PPUCTRL
-        if (PPUCTRL & 0x80)
-        {
-            nmi = true;
-        }
-    }
-
-    // ============================
     // Pre-render line (scanline 261, cycle 1)
     // Clear VBlank and sprite flags
-    // ============================
     if (scanline == 261 && cycle == 1)
     {
         PPUSTATUS &= ~(uint8_t)PPU_Status::VBlank;

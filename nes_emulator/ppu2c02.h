@@ -14,7 +14,6 @@ public:
     void    clocks(int cpuCycles);
     uint8_t ppuRead(uint16_t addr);
     void    ppuWrite(uint16_t addr, uint8_t data);
-    void    setCpuDataBus(uint8_t data);
 
     uint16_t cycle      = 0;        // dot (0–340)
     uint16_t scanline   = 0;        // 0–261

@@ -59,7 +59,7 @@ void NES::clock()
             }
             #pragma  endregion
 
-            cpu.logState(log);
+            cpu.logState(log, ppu.cpuDataBus, ppu.PPUSTATUS);
 
             cpu.opcode = cpu.read(cpu.PC++);
 

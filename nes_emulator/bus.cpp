@@ -31,18 +31,12 @@ uint8_t Bus::cpuRead(uint16_t addr, bool readOnly) {
     if (cart && cart->cpuRead(addr, data))
         return data;
 
-    cpuDataBus = data;
-    ppu->setCpuDataBus(cpuDataBus);
-
     return 0x00;
 }
 
 
 void Bus::cpuWrite(uint16_t addr, uint8_t data) {
     
-    cpuDataBus = data;
-    ppu->setCpuDataBus(cpuDataBus);
-
     // Internal RAM ($0000 – $1FFF)
     if (addr <= 0x1FFF)
     {

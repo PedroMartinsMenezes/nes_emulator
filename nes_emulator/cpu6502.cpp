@@ -981,7 +981,7 @@ uint8_t CPU6502::peek(uint16_t addr) {
     return bus->cpuRead(addr, true);
 }
 
-void CPU6502::logState(std::ofstream& log) {
+void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
 
     static uint32_t max_lines = 0;
 
@@ -1000,7 +1000,7 @@ void CPU6502::logState(std::ofstream& log) {
     std::string operand = formatOperand(pc);
 
     // nestest logs cycles at instruction START
-    uint64_t cyc = totalCycles; //@@@ - 1
+    uint64_t cyc = totalCycles;
 
     int ppuX = (int)(cyc * 3) % 341;
     int ppuY = ((int)(cyc * 3) / 341) % 262;
@@ -1013,7 +1013,7 @@ void CPU6502::logState(std::ofstream& log) {
 
     snprintf(
         buffer, sizeof(buffer),
-        "%04X  %02X %02s %02s %s%-3s %-27s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%llu",
+        "%04X  %02X %02s %02s %s%-3s %-27s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%llu OpenBus:%02X R2002:%02X",
         pc,
         op,
         byte1,
@@ -1023,18 +1023,21 @@ void CPU6502::logState(std::ofstream& log) {
         operand.c_str(),
         A, X, Y, P, SP,
         ppuY, ppuX,
-        cyc
+        cyc,
+        cpuDataBus,
+        r2002
     );
 
-    /*if (max_lines < 10 || cyc == 27394 || cyc == 206076 || cyc == 206080)
+    //@@@ remove this
+    /*if (cyc == 265639 || cyc == 265642 || cyc == 265646)
     {
-        std::cout << buffer << "\n";
+        log.flush();
     }*/
 
     log << buffer << "\n";
 
-    //@@@
-    if (max_lines++ > 100000)
+    //@@@ remove this
+    if (max_lines++ > 200000)
     {
         log.close();
         exit(0);
@@ -1150,6 +1153,12 @@ uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) {
     else if (effectiveAddress == 0x2001)
         return 0xFF;
     else if (effectiveAddress == 0x2002)
+        return 0xFF;
+    else if (effectiveAddress == 0x2003)
+        return 0xFF;
+    else if (effectiveAddress == 0x2004)
+        return 0xFF;
+    else if (effectiveAddress == 0x2005)
         return 0xFF;
     else if (effectiveAddress == 0x2006)
         return 0xFF;

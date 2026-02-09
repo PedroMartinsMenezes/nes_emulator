@@ -164,7 +164,7 @@ public:
     uint64_t totalCycles = 0;
 
     //log functions
-    void logState(std::ofstream& log);
+    void logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002);
     bool isMemoryOpcode(uint8_t op) const;
     std::string formatOperand(uint16_t pc);
     uint8_t peek(uint16_t addr);
