@@ -985,6 +985,8 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
 
     static uint32_t max_lines = 0;
 
+    max_lines++;
+
     uint16_t pc = PC;
 
     uint8_t op = peek(pc);
@@ -1037,7 +1039,7 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
     log << buffer << "\n";
 
     //@@@ remove this
-    if (max_lines++ > 200000)
+    if (max_lines > 500000)
     {
         log.close();
         exit(0);
