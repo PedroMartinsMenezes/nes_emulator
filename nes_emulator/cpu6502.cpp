@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <filesystem>
+#include <string>
+namespace fs = std::filesystem;
 
 
 #pragma region Constructor
@@ -981,11 +984,22 @@ uint8_t CPU6502::peek(uint16_t addr) {
     return bus->cpuRead(addr, true);
 }
 
-void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
+void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, std::string log_path, int scanline, int cycle) {
 
-    static uint32_t max_lines = 0;
+    static bool enable_log = true;
+    static uint32_t file_number = 0;
+    static uint32_t line_count = 0;
 
-    max_lines++;
+    line_count++;
+
+    //@@@ Stop point of 'ppu_vbl_nmi.nes' (Not working)
+    if (PC == 0x073B)
+    {
+        enable_log = false;
+    }
+
+    if (!enable_log)
+        return;
 
     uint16_t pc = PC;
 
@@ -1004,9 +1018,6 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
     // nestest logs cycles at instruction START
     uint64_t cyc = totalCycles;
 
-    int ppuX = (int)(cyc * 3) % 341;
-    int ppuY = ((int)(cyc * 3) / 341) % 262;
-
     char prefix[2] = " ";
     if (lookup[op].name[0] == '*')
         prefix[0] = '\0';
@@ -1024,25 +1035,24 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002) {
         lookup[op].name,
         operand.c_str(),
         A, X, Y, P, SP,
-        ppuY, ppuX,
+        (scanline < 0 ? 261 : scanline), cycle,
         cyc,
         cpuDataBus,
         r2002
     );
 
-    //@@@ remove this
-    /*if (cyc == 265639 || cyc == 265642 || cyc == 265646)
-    {
-        log.flush();
-    }*/
-
     log << buffer << "\n";
 
-    //@@@ remove this
-    if (max_lines > 500000)
-    {
+    //@@@ Saving page files
+    if (line_count / 500000 != file_number) {
         log.close();
-        exit(0);
+        file_number++;
+        fs::path full_path = log_path;
+        fs::path dir_path = full_path.parent_path();
+        char filename[32];
+        sprintf(filename, "nes_emulator_%d.log", file_number);
+        log_path = (dir_path / filename).string();
+        log.open(log_path);
     }
 }
 
@@ -1067,6 +1077,7 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         return std::string(buf);
     }
     else if (mode == &CPU6502::ZPY) {
+
         uint8_t base = b1;
         uint8_t ea = (base + Y) & 0xFF;
         uint8_t val = bus->cpuRead(ea, true);

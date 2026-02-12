@@ -32,6 +32,9 @@ private:
     // Character ROM (Store Sprites)
     std::vector<uint8_t> chrROM;
 
+    // Cartridge PRG-RAM (WRAM / Save RAM)
+    std::vector<uint8_t> prgRAM;
+
     // Character RAM ?
     std::vector<uint8_t> chrRAM;
 

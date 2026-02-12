@@ -3,7 +3,7 @@
 
 
 PPU2C02::PPU2C02() {
-    
+
 }
 
 void PPU2C02::reset()
@@ -27,7 +27,7 @@ void PPU2C02::reset()
 }
 
 // https://www.nesdev.org/wiki/PPU_registers
-uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly) 
+uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
 {
     uint8_t data = 0x00;
 
@@ -72,7 +72,7 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
 void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
 
     cpuDataBus = data;
-    
+
     switch (addr & 7)
     {
     case 0: // $2000
@@ -82,6 +82,7 @@ void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
 
     case 1: // $2001
         PPUMASK = data;
+        isRendering =((PPUMASK & 0x18) && (scanline < 240));
         break;
 
     case 2: // $2002 (read only)
@@ -167,21 +168,44 @@ void PPU2C02::clock()
     // Advance PPU timing
     cycle++;
 
-    if (cycle == 341)
+    if (cycle == 338)
+    {
+        if (scanline == -1)
+        {
+            scanlineLength = (shortScanline && isRendering) ? 340 : 341;
+        }
+        else
+        {
+            scanlineLength = 341;
+        }
+    }
+    else if (cycle == scanlineLength)
     {
         cycle = 0;
         scanline++;
 
-        if (scanline == 241) // VBlank start
+        if (scanline == 240)
+        {
+            isRendering = false;
+        }
+        else if (scanline == 241) // VBlank start
         {
             PPUSTATUS |= 0x80; //Set VBlank
             nmi = (PPUCTRL & 0x80) > 0; // Enable NMI if PPUCTRL has bit 7 set
         }
-        else if (scanline >= 262)
+        else if (scanline == 261)
         {
-            scanline = 0;
             frame++;
+            scanline = -1;
+            shortScanline = !shortScanline;
+            isRendering = (PPUMASK & 0x18) > 0;
+            PPUSTATUS &= ~0x60; // Sprite flags are cleared immediately
         }
+    }
+    else if ((scanline == -1) && (cycle == 1))
+    {
+        // VBL flag gets cleared a cycle late
+        PPUSTATUS &= ~0x80;
     }
 
     // Pre-render line (scanline 261, cycle 1)

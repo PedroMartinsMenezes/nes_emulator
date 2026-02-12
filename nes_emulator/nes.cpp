@@ -9,6 +9,7 @@ NES::NES(const std::string& romPath) : cart(romPath) {
     bus.ppu = &ppu;
     bus.cart = &cart;
     cpu.connectBus(&bus);
+    this->romPath = romPath;
     open_log(romPath);
 }
 
@@ -49,17 +50,7 @@ void NES::clock()
         #pragma region CPU Clock (cpu.clock()))
         if (cpu.cycles == 0)
         {
-            #pragma region Checking the PPU cycles
-            uint64_t cyc = cpu.totalCycles;
-            int ppuX = (int)(cyc * 3) % 341;
-            int ppuY = ((int)(cyc * 3) / 341) % 262;
-            if (ppuX != ppu.cycle || ppuY != ppu.scanline)
-            {
-                exit(0);
-            }
-            #pragma  endregion
-
-            cpu.logState(log, ppu.cpuDataBus, ppu.PPUSTATUS);
+            cpu.logState(log, ppu.cpuDataBus, ppu.PPUSTATUS, romPath, ppu.scanline, ppu.cycle);
 
             cpu.opcode = cpu.read(cpu.PC++);
 

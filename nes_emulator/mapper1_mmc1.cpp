@@ -4,11 +4,13 @@
 Mapper1::Mapper1(
     uint8_t prgBanks,
     uint8_t chrBanks,
-    std::vector<uint8_t>& prg,
+    std::vector<uint8_t>& prgRom,
+    std::vector<uint8_t>& prgRam,
     std::vector<uint8_t>& chr,
     bool chrIsRam)
 : 
-    prgROM(prg),
+    prgROM(prgRom),
+    prgRAM(prgRam),
     chrMem(chr),
     chrRAM(chrIsRam),
     prgBankCount(prgBanks)
@@ -18,8 +20,14 @@ Mapper1::Mapper1(
 
 bool Mapper1::cpuRead(uint16_t addr, uint8_t& data)
 {
-    if (addr < 0x8000)
+    if (addr < 0x6000)
         return false;
+
+    if (addr >= 0x6000 && addr <= 0x7FFF)
+    {
+        data = prgRAM[addr - 0x6000];
+        return true;
+    }
 
     uint32_t bank = 0;
     uint32_t offset = 0;
@@ -66,8 +74,14 @@ bool Mapper1::cpuRead(uint16_t addr, uint8_t& data)
 
 bool Mapper1::cpuWrite(uint16_t addr, uint8_t data)
 {
-    if (addr < 0x8000)
+    if (addr < 0x6000)
         return false;
+
+    if (addr >= 0x6000 && addr <= 0x7FFF)
+    {
+        prgRAM[addr - 0x6000] = data;
+        return true;
+    }
 
     if (data & 0x80) {
         shiftReg = 0;

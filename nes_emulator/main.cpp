@@ -108,7 +108,7 @@ int run_nestest(const char* romPath) {
             running = false;
         }
         if (cpu.complete()) {
-            cpu.logState(log, 0, 0);
+            cpu.logState(log, 0, 0, log_path, 0, 0);
         }
         cpu.clock();
     }

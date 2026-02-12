@@ -23,6 +23,7 @@ public:
     Bus bus;
 
     std::ofstream log;
+    std::string romPath;
 
 private:
     uint64_t systemClockCounter = 0;

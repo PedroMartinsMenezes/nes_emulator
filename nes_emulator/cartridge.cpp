@@ -37,7 +37,7 @@ Cartridge::Cartridge(const std::string& romPath)
 
     if (chrIsRam)
     {
-        chrRAM.resize(8 * 1024);
+    chrRAM.resize(8 * 1024);
     }
     else
     {
@@ -45,6 +45,8 @@ Cartridge::Cartridge(const std::string& romPath)
         chrROM.resize(chrSize);
         file.read(reinterpret_cast<char*>(chrROM.data()), chrSize);
     }
+
+    prgRAM.resize(8 * 1024);
 
     // --- Mapper number ---
     uint8_t mapperId =
@@ -58,7 +60,8 @@ Cartridge::Cartridge(const std::string& romPath)
             header.prgChunks,
             header.chrChunks,
             prgROM,
-            chrIsRam ? chrRAM : chrROM,
+            prgRAM,
+            chrROM,
             chrIsRam
         );
         break;

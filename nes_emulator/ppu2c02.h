@@ -15,9 +15,12 @@ public:
     uint8_t ppuRead(uint16_t addr);
     void    ppuWrite(uint16_t addr, uint8_t data);
 
-    uint16_t cycle      = 0;        // dot (0–340)
-    uint16_t scanline   = 0;        // 0–261
+    int cycle           = 0;        // dot (0–340)
+    int scanline        = 0;        // 0–261
     uint64_t frame      = 0;        // current frame
+    bool shortScanline  = true;     // Nintendulator logic
+    int scanlineLength  = 341;      // Nintendulator logic
+    bool isRendering    = false;    // Nintendulator logic
 
     bool nmi            = false;    // Non-Maskable Interrupt
 

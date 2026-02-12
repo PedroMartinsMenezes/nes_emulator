@@ -8,7 +8,8 @@ class Mapper1 : public IMapper {
 public:
     Mapper1(uint8_t prgBanks,
         uint8_t chrBanks,
-        std::vector<uint8_t>& prg,
+        std::vector<uint8_t>& prgRom,
+        std::vector<uint8_t>& prgRam,
         std::vector<uint8_t>& chr,
         bool chrIsRam);
 
@@ -21,8 +22,10 @@ public:
 private:
     // --- ROM / RAM ---
     std::vector<uint8_t>& prgROM;
+    std::vector<uint8_t> prgRAM;
     std::vector<uint8_t>& chrMem;
     bool chrRAM;
+
 
     // --- PRG ---
     uint8_t prgBankCount;
