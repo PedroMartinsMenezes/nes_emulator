@@ -56,23 +56,14 @@ void NES::clock()
 
             auto& inst = cpu.lookup[cpu.opcode];
 
-            cpu.totalCycles += inst.cycles;
-
             ppu.clocks(inst.cycles);
 
             bool extraCycles1 = (cpu.*inst.addrmode)() == 1;
-
             bool extraCycles2 = (cpu.*inst.operate)() == 1;
-
             uint8_t extraCycle = (extraCycles1 && extraCycles2) ? 1 : 0;
 
-            cpu.cycles += extraCycle;
-            cpu.totalCycles += cpu.cycles;
-
-            ppu.clocks(cpu.cycles);
-
-            if (cpu.cycles > 0)
-                cpu.cycles--;
+            cpu.totalCycles += inst.cycles + extraCycle;
+            ppu.clocks(extraCycle);
         }
         else
         {
@@ -82,12 +73,9 @@ void NES::clock()
 
             cpu.totalCycles++;
 
-            if (cpu.cycles > 0)
-                cpu.cycles--;
+            cpu.cycles--;
         }
         #pragma endregion
-
-        
 
         if (cpu.complete())
         {

@@ -993,7 +993,7 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, st
     line_count++;
 
     //@@@ Stop point of 'ppu_vbl_nmi.nes' (Not working)
-    if (PC == 0x073B)
+    if (PC == 0x073B || file_number == 34)
     {
         enable_log = false;
     }
@@ -1053,6 +1053,14 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, st
         sprintf(filename, "nes_emulator_%d.log", file_number);
         log_path = (dir_path / filename).string();
         log.open(log_path);
+
+        if (file_number == 11) {
+            log.close();
+            exit(0);
+        }
+        else {
+            std::cout << file_number << '\n';
+        }
     }
 }
 

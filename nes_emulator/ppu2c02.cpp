@@ -76,13 +76,18 @@ void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
     switch (addr & 7)
     {
     case 0: // $2000
+        if ((data & 0x80) && !(PPUCTRL & 0x80) && (PPUSTATUS & 0x80) && (scanline != -1))
+            nmi = true;
+        // race condition
+        if ((scanline == 241) && !(data & 0x80) && (cycle < 3))
+            nmi = false;
         PPUCTRL = data;
         tram_addr = (tram_addr & 0xF3FF) | ((data & 0x03) << 10);
         break;
 
     case 1: // $2001
         PPUMASK = data;
-        isRendering =((PPUMASK & 0x18) && (scanline < 240));
+        isRendering = ((PPUMASK & 0x18) && (scanline < 240));
         break;
 
     case 2: // $2002 (read only)
@@ -170,14 +175,7 @@ void PPU2C02::clock()
 
     if (cycle == 338)
     {
-        if (scanline == -1)
-        {
-            scanlineLength = (shortScanline && isRendering) ? 340 : 341;
-        }
-        else
-        {
-            scanlineLength = 341;
-        }
+        scanlineLength = (scanline == -1 && shortScanline && isRendering) ? 340 : 341;
     }
     else if (cycle == scanlineLength)
     {
@@ -191,7 +189,8 @@ void PPU2C02::clock()
         else if (scanline == 241) // VBlank start
         {
             PPUSTATUS |= 0x80; //Set VBlank
-            nmi = (PPUCTRL & 0x80) > 0; // Enable NMI if PPUCTRL has bit 7 set
+            if (PPUCTRL & 0x80)
+                nmi = true; // Enable NMI if PPUCTRL has bit 7 set
         }
         else if (scanline == 261)
         {
