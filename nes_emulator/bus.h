@@ -9,10 +9,13 @@ class Cartridge;
 class Bus {
 public:
     Bus();
+    void reset();
 
     uint8_t cpuRead(uint16_t addr, bool readOnly = false);
-
     void    cpuWrite(uint16_t addr, uint8_t data);
+
+    uint8_t ppuRead(uint16_t addr);
+    void ppuWrite(uint16_t addr, uint8_t data);
 
     void    clockDMA();
 
@@ -30,4 +33,6 @@ public:
     bool nestestMode = false;
 
     bool dmaActive = false;
+
+    uint64_t systemClockCounter = 0;
 };
