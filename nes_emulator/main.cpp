@@ -15,8 +15,8 @@ int run_nestest(const char* romPath);
 int run_ppu_vbl_nmi(const char* romPath);
 
 
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv) 
+{
     // Configuration
     bool is_nestest = false;
     bool is_ppu_vbl_nmi = false;
@@ -52,15 +52,16 @@ int main(int argc, char** argv) {
     NES nes(argv[1]);
     nes.reset();
     bool running = true;
-    while (running) {
+    while (running) 
+    {
         nes.clock();
     }
 
     return 0;
 }
 
-int run_nestest(const char* romPath) {
-
+int run_nestest(const char* romPath) 
+{
     fs::path rom_path = romPath;
     fs::path rom_dir = rom_path.parent_path();
 
@@ -94,7 +95,8 @@ int run_nestest(const char* romPath) {
     std::cout << "Log : " << log_path << "\n";
 
     log.open(log_path);
-    if (!log) {
+    if (!log) 
+    {
         std::cerr << "Failed to open log file\n";
         return 1;
     }
@@ -102,15 +104,16 @@ int run_nestest(const char* romPath) {
     // Main execution loop
     bool running = true;
 
-    while (running) {
+    while (running) 
+    {
         // check fixed exit point
         if (cpu.PC == 0xC66E && cpu.complete()) {
             running = false;
         }
         if (cpu.complete()) {
-            cpu.logState(log, 0, 0, log_path, 0, 0);
+            cpu.logState(log, log_path, nullptr);
         }
-        cpu.clock();
+        cpu.clock(log, romPath);
     }
 
     // Cleanup
@@ -120,8 +123,8 @@ int run_nestest(const char* romPath) {
     return 0;
 }
 
-int run_ppu_vbl_nmi(const char* romPath) {
-
+int run_ppu_vbl_nmi(const char* romPath) 
+{
     int count = 0;
     NES nes(romPath);
     nes.reset();
