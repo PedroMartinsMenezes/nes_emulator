@@ -14,7 +14,7 @@ public:
     void reset();
     void irq();
     void nmi();
-    void clock();
+    void clock(std::ofstream& log, std::string romPath);
 
     void connectBus(Bus* b) { bus = b; }
     bool complete() const { return cycles == 0; }
@@ -158,13 +158,11 @@ public:
 
 public:
 
-    //clock functions
-    inline int ppuCycle() const { return (int)(totalCycles * 3) % 341; }
-    inline int ppuScanline() const { return (int)(totalCycles * 3) / 341; }
-    uint64_t totalCycles = 0;
+    //NMI functions
+    void requestNMI();
 
     //log functions
-    void logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, std::string log_path, int scanline, int cycle);
+    void logState(std::ofstream& log, std::string log_path, Bus* bus);
     bool isMemoryOpcode(uint8_t op) const;
     std::string formatOperand(uint16_t pc);
     uint8_t peek(uint16_t addr);
@@ -182,6 +180,7 @@ public: //Inner Variables
     uint16_t addr_rel   = 0x0000;
     uint8_t  opcode     = 0x00;    
     uint8_t  cycles     = 0;
+    int      totalCycles= 0;
 
     // Registers - https://www.nesdev.org/obelisk-6502-guide/registers.html
     uint16_t PC         = 0x0000;   // Program Counter
@@ -193,4 +192,6 @@ public: //Inner Variables
 
     //Stall
     uint16_t stall      = 0;        // ?
+
+    bool nmiPending     = false;
 };

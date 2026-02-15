@@ -1,17 +1,19 @@
 #include "cpu6502.h"
-#include "bus.h"
 #include <fstream>
 #include <cstdio>
 #include <sstream>
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include "bus.h"
+#include "ppu2c02.h"
 namespace fs = std::filesystem;
 
 
 #pragma region Constructor
 
-CPU6502::CPU6502() {
+CPU6502::CPU6502() 
+{
     lookup.fill({ "NOP", 1, &CPU6502::NOP, &CPU6502::IMP, 2 });
 
     // --- ADC ---
@@ -339,32 +341,38 @@ CPU6502::CPU6502() {
 
 #pragma region Helpers
 
-uint8_t CPU6502::getFlag(FLAGS f) const {
+uint8_t CPU6502::getFlag(FLAGS f) const 
+{
     return (P & f) ? 1 : 0;
 }
 
-void CPU6502::setFlag(FLAGS f, bool v) {
+void CPU6502::setFlag(FLAGS f, bool v) 
+{
     if (v)
         P |= f;
     else
         P &= ~f;
 }
 
-uint8_t CPU6502::read(uint16_t addr) {
+uint8_t CPU6502::read(uint16_t addr) 
+{
     return bus->cpuRead(addr);
 }
 
-void CPU6502::write(uint16_t addr, uint8_t data) {
+void CPU6502::write(uint16_t addr, uint8_t data) 
+{
     bus->cpuWrite(addr, data);
 }
 
-uint8_t CPU6502::fetch() {
+uint8_t CPU6502::fetch() 
+{
     if (!(lookup[opcode].addrmode == &CPU6502::IMP))
         fetched = read(addr_abs);
     return fetched;
 }
 
-void CPU6502::branch() {
+void CPU6502::branch() 
+{
     cycles++;
     uint16_t target = PC + addr_rel;
     if ((target & 0xFF00) != (PC & 0xFF00)) cycles++;
@@ -375,14 +383,16 @@ void CPU6502::branch() {
 
 #pragma region Core control
 
-void CPU6502::reset() {
+void CPU6502::reset() 
+{
     A = X = Y = 0;
     SP = 0xFD;
     P = 0x24;
 
     addr_abs = 0xFFFC;
 
-    if (nestestMode) {
+    if (nestestMode) 
+    {
         addr_abs = 0xC000;
     }
 
@@ -394,8 +404,10 @@ void CPU6502::reset() {
 }
 
 // Interrupt Request
-void CPU6502::irq() {
-    if (!getFlag(I)) {
+void CPU6502::irq() 
+{
+    if (!getFlag(I)) 
+    {
         write(0x0100 + SP--, (PC >> 8) & 0xFF);
         write(0x0100 + SP--, PC & 0xFF);
 
@@ -414,7 +426,8 @@ void CPU6502::irq() {
 }
 
 // Non Maskable Interrupt
-void CPU6502::nmi() {
+void CPU6502::nmi() 
+{
     write(0x0100 + SP--, (PC >> 8) & 0xFF);
     write(0x0100 + SP--, PC & 0xFF);
 
@@ -431,28 +444,49 @@ void CPU6502::nmi() {
     cycles = 7;
 }
 
-void CPU6502::clock() {
-    if (cycles == 0) {
-        opcode = read(PC++);
-        auto& inst = lookup[opcode];
-        cycles = inst.cycles;
-        uint8_t a1 = (this->*inst.addrmode)();
-        uint8_t a2 = (this->*inst.operate)();
-        cycles += (a1 & a2);
+void CPU6502::clock(std::ofstream& log, std::string romPath)
+{
+    if (cycles == 0)
+    {
+        // Interrupts are sampled BEFORE fetching next opcode
+        if (nmiPending)
+        {
+            nmiPending = false;
+            nmi();
+        }
+        else
+        {
+            opcode = read(PC++);
+
+            logState(log, romPath, bus);
+
+            auto& inst = lookup[opcode];
+
+            cycles = inst.cycles;
+
+            uint8_t additional1 = (this->*inst.addrmode)();
+            uint8_t additional2 = (this->*inst.operate)();
+
+            cycles += (additional1 & additional2);
+        }
     }
+
     cycles--;
     totalCycles++;
 }
+
 
 #pragma endregion
 
 #pragma region Stack
 
-void CPU6502::push(uint8_t v) {
+void CPU6502::push(uint8_t v) 
+{
     write(0x0100 + SP--, v);
 }
 
-uint8_t CPU6502::pull() {
+uint8_t CPU6502::pull() 
+{
     return read(0x0100 + ++SP);
 }
 
@@ -461,38 +495,44 @@ uint8_t CPU6502::pull() {
 #pragma region Addressing Modes - https://www.nesdev.org/obelisk-6502-guide/addressing.html
 
 //Implicit
-uint8_t CPU6502::IMP() {
+uint8_t CPU6502::IMP() 
+{
     fetched = A;
     return 0;
 }
 
 //Immediate
-uint8_t CPU6502::IMM() {
+uint8_t CPU6502::IMM() 
+{
     addr_abs = PC++;
     return 0;
 }
 
 //Zero Page
-uint8_t CPU6502::ZP0() {
+uint8_t CPU6502::ZP0() 
+{
     addr_abs = read(PC++);
     addr_abs &= 0x00FF;
     return 0;
 }
 
 //Zero Page + X
-uint8_t CPU6502::ZPX() {
+uint8_t CPU6502::ZPX() 
+{
     addr_abs = (read(PC++) + X) & 0x00FF;
     return 0;
 }
 
 //Zero Page + Y
-uint8_t CPU6502::ZPY() {
+uint8_t CPU6502::ZPY() 
+{
     addr_abs = (read(PC++) + Y) & 0x00FF;
     return 0;
 }
 
 //Absolute
-uint8_t CPU6502::ABS() {
+uint8_t CPU6502::ABS() 
+{
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     addr_abs = (hi << 8) | lo;
@@ -500,7 +540,8 @@ uint8_t CPU6502::ABS() {
 }
 
 //Absolute + X
-uint8_t CPU6502::ABX() {
+uint8_t CPU6502::ABX() 
+{
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     uint16_t base = (hi << 8) | lo;
@@ -512,7 +553,8 @@ uint8_t CPU6502::ABX() {
 }
 
 //Absolute + Y
-uint8_t CPU6502::ABY() {
+uint8_t CPU6502::ABY() 
+{
     uint16_t lo = read(PC++);
     uint16_t hi = read(PC++);
     uint16_t base = (hi << 8) | lo;
@@ -522,7 +564,8 @@ uint8_t CPU6502::ABY() {
 }
 
 //Indirect
-uint8_t CPU6502::IND() {
+uint8_t CPU6502::IND() 
+{
     uint16_t ptr_lo = read(PC++);
     uint16_t ptr_hi = read(PC++);
     uint16_t ptr = (ptr_hi << 8) | ptr_lo;
@@ -542,7 +585,8 @@ uint8_t CPU6502::IND() {
 }
 
 //Indexed Indirect + X
-uint8_t CPU6502::IZX() {
+uint8_t CPU6502::IZX() 
+{
     uint16_t t = (read(PC++) + X) & 0x00FF;
     uint16_t lo = read(t & 0x00FF);
     uint16_t hi = read((t + 1) & 0x00FF);
@@ -551,7 +595,8 @@ uint8_t CPU6502::IZX() {
 }
 
 //Indirect Indexed + Y
-uint8_t CPU6502::IZY() {
+uint8_t CPU6502::IZY() 
+{
     uint16_t t = read(PC++);
     uint16_t lo = read(t & 0x00FF);
     uint16_t hi = read((t + 1) & 0x00FF);
@@ -563,7 +608,8 @@ uint8_t CPU6502::IZY() {
 }
 
 //Relative
-uint8_t CPU6502::REL() {
+uint8_t CPU6502::REL() 
+{
     addr_rel = read(PC++);
     if (addr_rel & 0x80) addr_rel |= 0xFF00;
     return 0;
@@ -645,7 +691,8 @@ uint8_t CPU6502::EOR() { fetch(); A ^= fetched; setFlag(Z, A == 0); setFlag(N, A
 uint8_t CPU6502::ORA() { fetch(); A |= fetched; setFlag(Z, A == 0); setFlag(N, A & 0x80); return 1; }
 
 //Test Bits
-uint8_t CPU6502::BIT() {
+uint8_t CPU6502::BIT() 
+{
     fetch();
     setFlag(Z, (A & fetched) == 0);
     setFlag(V, fetched & 0x40);
@@ -658,7 +705,8 @@ uint8_t CPU6502::BIT() {
 #pragma region Arithmetic Operations
 
 //Add with Carry
-uint8_t CPU6502::ADC() {
+uint8_t CPU6502::ADC() 
+{
     fetch();
     uint16_t sum = (uint16_t)A + (uint16_t)fetched + getFlag(C);
     setFlag(C, sum > 0xFF);
@@ -670,7 +718,8 @@ uint8_t CPU6502::ADC() {
 }
 
 //Subtract with Carry
-uint8_t CPU6502::SBC() {
+uint8_t CPU6502::SBC() 
+{
     fetch();
     uint16_t value = fetched ^ 0x00FF;
     uint16_t sum = (uint16_t)A + value + getFlag(C);
@@ -722,7 +771,8 @@ uint8_t CPU6502::DEY() { Y--; setFlag(Z, Y == 0); setFlag(N, Y & 0x80); return 0
 #pragma region Shifts and Rotates
 
 //Arithmetic Shift Left
-uint8_t CPU6502::ASL() {
+uint8_t CPU6502::ASL() 
+{
     fetch();
     uint16_t r = fetched << 1;
     setFlag(C, r & 0xFF00);
@@ -734,7 +784,8 @@ uint8_t CPU6502::ASL() {
 }
 
 //Logical Shift Right
-uint8_t CPU6502::LSR() {
+uint8_t CPU6502::LSR() 
+{
     fetch();
     setFlag(C, fetched & 0x01);
     uint8_t r = fetched >> 1;
@@ -746,7 +797,8 @@ uint8_t CPU6502::LSR() {
 }
 
 //Rotate Left
-uint8_t CPU6502::ROL() {
+uint8_t CPU6502::ROL() 
+{
     fetch();
     uint16_t r = (fetched << 1) | getFlag(C);
     setFlag(C, r & 0xFF00);
@@ -758,7 +810,8 @@ uint8_t CPU6502::ROL() {
 }
 
 //Rotate Right
-uint8_t CPU6502::ROR() {
+uint8_t CPU6502::ROR() 
+{
     fetch();
     uint16_t r = (getFlag(C) << 7) | (fetched >> 1);
     setFlag(C, fetched & 0x01);
@@ -774,13 +827,15 @@ uint8_t CPU6502::ROR() {
 #pragma region Jumps and Calls
 
 //Jump to Address
-uint8_t CPU6502::JMP() {
+uint8_t CPU6502::JMP() 
+{
     PC = addr_abs;
     return 0;
 }
 
 //Jump to Subroutine
-uint8_t CPU6502::JSR() {
+uint8_t CPU6502::JSR() 
+{
     PC--;
     push((PC >> 8) & 0xFF);
     push(PC & 0xFF);
@@ -789,7 +844,8 @@ uint8_t CPU6502::JSR() {
 }
 
 //Return from Subroutine
-uint8_t CPU6502::RTS() {
+uint8_t CPU6502::RTS() 
+{
     uint16_t lo = pull();
     uint16_t hi = pull();
     PC = ((hi << 8) | lo) + 1;
@@ -854,7 +910,8 @@ uint8_t CPU6502::CLV() { setFlag(V, false); return 0; }
 #pragma region System Functions
 
 //Break
-uint8_t CPU6502::BRK() {
+uint8_t CPU6502::BRK() 
+{
     PC++;
     push((PC >> 8) & 0xFF); push(PC & 0xFF);
     push(P | B | U);
@@ -864,12 +921,14 @@ uint8_t CPU6502::BRK() {
 }
 
 //No Operation
-uint8_t CPU6502::NOP() {
+uint8_t CPU6502::NOP() 
+{
     return 0;
 }
 
 //Return from Interrupt
-uint8_t CPU6502::RTI() {
+uint8_t CPU6502::RTI() 
+{
     P = pull();
 
     // NES / 6502 rules
@@ -887,11 +946,13 @@ uint8_t CPU6502::RTI() {
 
 #pragma region Illegal Instructions
 
-uint8_t CPU6502::NOP1() {
+uint8_t CPU6502::NOP1() 
+{
     return 1;   // pretend it is a read instruction for timing
 }
 
-uint8_t CPU6502::LAX() {
+uint8_t CPU6502::LAX() 
+{
     fetch();
     A = fetched;
     X = fetched;
@@ -900,12 +961,14 @@ uint8_t CPU6502::LAX() {
     return 1;
 }
 
-uint8_t CPU6502::SAX() {
+uint8_t CPU6502::SAX() 
+{
     write(addr_abs, A & X);
     return 0;
 }
 
-uint8_t CPU6502::DCP() {
+uint8_t CPU6502::DCP() 
+{
     fetch();
     uint8_t v = fetched - 1;
     write(addr_abs, v);
@@ -916,7 +979,8 @@ uint8_t CPU6502::DCP() {
     return 0;
 }
 
-uint8_t CPU6502::ISC() {
+uint8_t CPU6502::ISC() 
+{
     fetch();
     uint8_t v = fetched + 1;
     write(addr_abs, v);
@@ -929,7 +993,8 @@ uint8_t CPU6502::ISC() {
     return 0;
 }
 
-uint8_t CPU6502::SLO() {
+uint8_t CPU6502::SLO() 
+{
     fetch();
     uint16_t r = fetched << 1;
     write(addr_abs, r & 0xFF);
@@ -940,7 +1005,8 @@ uint8_t CPU6502::SLO() {
     return 0;
 }
 
-uint8_t CPU6502::RLA() {
+uint8_t CPU6502::RLA() 
+{
     fetch();
     uint16_t r = (fetched << 1) | getFlag(C);
     write(addr_abs, r & 0xFF);
@@ -951,7 +1017,8 @@ uint8_t CPU6502::RLA() {
     return 0;
 }
 
-uint8_t CPU6502::SRE() {
+uint8_t CPU6502::SRE() 
+{
     fetch();
     setFlag(C, fetched & 1);
     uint8_t r = fetched >> 1;
@@ -962,7 +1029,8 @@ uint8_t CPU6502::SRE() {
     return 0;
 }
 
-uint8_t CPU6502::RRA() {
+uint8_t CPU6502::RRA() 
+{
     fetch();
     uint16_t r = (getFlag(C) << 7) | (fetched >> 1);
     write(addr_abs, r & 0xFF);
@@ -978,14 +1046,22 @@ uint8_t CPU6502::RRA() {
 
 #pragma endregion
 
+#pragma endregion
+
 #pragma region Logging
 
-uint8_t CPU6502::peek(uint16_t addr) {
+uint8_t CPU6502::peek(uint16_t addr) 
+{
     return bus->cpuRead(addr, true);
 }
 
-void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, std::string log_path, int scanline, int cycle) {
-
+void CPU6502::logState(std::ofstream& log, std::string log_path, Bus* bus)
+{
+    uint8_t cpuDataBus = bus->ppu->cpuDataBus;
+    uint8_t r2002 = bus->ppu->PPUSTATUS;
+    int scanline = bus->ppu->scanline;
+    int cycle = bus->ppu->cycle;
+    
     static bool enable_log = true;
     static uint32_t file_number = 0;
     static uint32_t line_count = 0;
@@ -1064,27 +1140,32 @@ void CPU6502::logState(std::ofstream& log, uint8_t cpuDataBus, uint8_t r2002, st
     }
 }
 
-std::string CPU6502::formatOperand(uint16_t pc) {
+std::string CPU6502::formatOperand(uint16_t pc) 
+{
     uint8_t op = peek(pc);
     uint8_t b1 = peek(pc + 1);
     uint8_t b2 = peek(pc + 2);
     char buf[32]{};
     auto mode = lookup[op].addrmode;
 
-    if (mode == &CPU6502::IMM) {
+    if (mode == &CPU6502::IMM) 
+    {
         snprintf(buf, sizeof(buf), "#$%02X", b1);
     }
-    else if (mode == &CPU6502::ZP0) {
+    else if (mode == &CPU6502::ZP0) 
+    {
         snprintf(buf, sizeof(buf), "$%02X", b1);
     }
-    else if (mode == &CPU6502::ZPX) {
+    else if (mode == &CPU6502::ZPX) 
+    {
         uint8_t base = b1;
         uint8_t ea = (base + X) & 0xFF;
         uint8_t val = bus->cpuRead(ea, true);
         snprintf(buf, sizeof(buf), "$%02X,X @ %02X = %02X", base, ea, val);
         return std::string(buf);
     }
-    else if (mode == &CPU6502::ZPY) {
+    else if (mode == &CPU6502::ZPY) 
+    {
 
         uint8_t base = b1;
         uint8_t ea = (base + Y) & 0xFF;
@@ -1092,25 +1173,29 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         snprintf(buf, sizeof(buf), "$%02X,Y @ %02X = %02X", base, ea, val);
         return std::string(buf);
     }
-    else if (mode == &CPU6502::ABS) {
+    else if (mode == &CPU6502::ABS) 
+    {
         uint16_t addr = (b2 << 8) | b1;
         snprintf(buf, sizeof(buf), "$%04X", addr);
     }
-    else if (mode == &CPU6502::ABX) {
+    else if (mode == &CPU6502::ABX) 
+    {
         uint16_t base = (b2 << 8) | b1;
         uint16_t ea = (base + X) & 0xFFFF;
         uint8_t val = bus->cpuRead(ea, true);
         snprintf(buf, sizeof(buf), "$%04X,X @ %04X = %02X", base, ea, val);
         return std::string(buf);
     }
-    else if (mode == &CPU6502::ABY) {
+    else if (mode == &CPU6502::ABY) 
+    {
         uint16_t base = (b2 << 8) | b1;
         uint16_t ea = (base + Y) & 0xFFFF;
         uint8_t val = bus->cpuRead(ea, true);
         snprintf(buf, sizeof(buf), "$%04X,Y @ %04X = %02X", base, ea, val);
         return std::string(buf);
     }
-    else if (mode == &CPU6502::IND) {
+    else if (mode == &CPU6502::IND) 
+    {
         uint16_t ptr = (b2 << 8) | b1;
         uint8_t lo = bus->cpuRead(ptr, true);
         uint8_t hi;
@@ -1122,7 +1207,8 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         uint16_t target = (hi << 8) | lo;
         snprintf(buf, sizeof(buf), "($%04X) = %04X", ptr, target);
     }
-    else if (mode == &CPU6502::IZX) {
+    else if (mode == &CPU6502::IZX) 
+    {
         uint8_t zp_addr = b1;
         uint8_t zp_ptr = (zp_addr + X) & 0xFF;
         uint8_t lo = bus->cpuRead(zp_ptr, true);
@@ -1131,7 +1217,8 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         uint8_t val = bus->cpuRead(ea, true);
         snprintf(buf, sizeof(buf), "($%02X,X) @ %02X = %04X = %02X", zp_addr, zp_ptr, ea, val);
     }
-    else if (mode == &CPU6502::IZY) {
+    else if (mode == &CPU6502::IZY) 
+    {
         uint8_t zp_addr = b1;
         uint8_t lo = bus->cpuRead(zp_addr, true);
         uint8_t hi = bus->cpuRead((zp_addr + 1) & 0xFF, true);
@@ -1140,24 +1227,29 @@ std::string CPU6502::formatOperand(uint16_t pc) {
         uint8_t val = bus->cpuRead(ea, true);
         snprintf(buf, sizeof(buf), "($%02X),Y = %04X @ %04X = %02X", zp_addr, base, ea, val);
     }
-    else if (mode == &CPU6502::REL) {
+    else if (mode == &CPU6502::REL) 
+    {
         int8_t offset = static_cast<int8_t>(b1);
         uint16_t target = pc + 2 + offset;
         snprintf(buf, sizeof(buf), "$%04X", target);
     }
-    else {
+    else 
+    {
         buf[0] = '\0'; // IMP
     }
 
     // Accumulator addressing (nestest formatting)
-    if (lookup[op].addrmode == &CPU6502::IMP) {
+    if (lookup[op].addrmode == &CPU6502::IMP) 
+    {
         auto fn = lookup[op].operate;
-        if (fn == &CPU6502::LSR || fn == &CPU6502::ASL || fn == &CPU6502::ROL || fn == &CPU6502::ROR) {
+        if (fn == &CPU6502::LSR || fn == &CPU6502::ASL || fn == &CPU6502::ROL || fn == &CPU6502::ROR) 
+        {
             return "A";
         }
     }
 
-    if (isMemoryOpcode(op) && mode != &CPU6502::IMP && mode != &CPU6502::IMM && mode != &CPU6502::IZX && mode != &CPU6502::IZY) {
+    if (isMemoryOpcode(op) && mode != &CPU6502::IMP && mode != &CPU6502::IMM && mode != &CPU6502::IZX && mode != &CPU6502::IZY) 
+    {
         uint16_t ea = computeEffectiveAddressForLog(pc);
         uint8_t value = getEffectiveValueForLog(ea);
         char tmp[8];
@@ -1168,15 +1260,16 @@ std::string CPU6502::formatOperand(uint16_t pc) {
     return std::string(buf);
 }
 
-uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) {
-
+uint8_t CPU6502::getEffectiveValueForLog(uint16_t effectiveAddress) 
+{
     if (effectiveAddress >= 0x2000 && effectiveAddress <= 0x3FFF)
         return 0xFF;
     
     return bus->cpuRead(effectiveAddress, true);
 }
 
-bool CPU6502::isMemoryOpcode(uint8_t op) const {
+bool CPU6502::isMemoryOpcode(uint8_t op) const 
+{
     if (lookup[op].addrmode == &CPU6502::IMM)
         return false;
 
@@ -1211,7 +1304,8 @@ bool CPU6502::isMemoryOpcode(uint8_t op) const {
         lookup[op].name[0] == '*';
 }
 
-uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
+uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) 
+{
     uint8_t op = peek(pc);
     uint8_t b1 = peek(pc + 1);
     uint8_t b2 = peek(pc + 2);
@@ -1225,14 +1319,16 @@ uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
     if (mode == &CPU6502::ABX) return ((b2 << 8) | b1) + X;
     if (mode == &CPU6502::ABY) return ((b2 << 8) | b1) + Y;
 
-    if (mode == &CPU6502::IZX) {
+    if (mode == &CPU6502::IZX) 
+    {
         uint8_t t = (b1 + X) & 0xFF;
         uint8_t lo = bus->cpuRead(t, true);
         uint8_t hi = bus->cpuRead((t + 1) & 0xFF, true);
         return (hi << 8) | lo;
     }
 
-    if (mode == &CPU6502::IZY) {
+    if (mode == &CPU6502::IZY) 
+    {
         uint8_t lo = bus->cpuRead(b1, true);
         uint8_t hi = bus->cpuRead((b1 + 1) & 0xFF, true);
         return ((hi << 8) | lo) + Y;
@@ -1240,5 +1336,15 @@ uint16_t CPU6502::computeEffectiveAddressForLog(uint16_t pc) {
 
     return 0;
 }
+
+#pragma endregion
+
+#pragma region NMI
+
+void CPU6502::requestNMI()
+{
+    nmiPending = true;
+}
+
 
 #pragma endregion
