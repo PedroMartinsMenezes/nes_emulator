@@ -26,7 +26,5 @@ public:
     std::string romPath;
 
 private:
-    uint64_t systemClockCounter = 0;
-
     void open_log(const std::string& romPath);
 };

@@ -4,35 +4,42 @@
 #include <iostream>
 namespace fs = std::filesystem;
 
-NES::NES(const std::string& romPath) : cart(romPath) {
+
+NES::NES(const std::string& romPath)
+:
+    cart(romPath)
+{
     bus.cpu = &cpu;
     bus.ppu = &ppu;
     bus.cart = &cart;
     cpu.connectBus(&bus);
+    ppu.connectBus(&bus);
     this->romPath = romPath;
     open_log(romPath);
 }
 
-NES::~NES() {
+NES::~NES() 
+{
     log.close();
 }
 
-void NES::open_log(const std::string& romPath) {
+void NES::open_log(const std::string& romPath) 
+{
     fs::path rom_path = romPath;
     fs::path rom_dir = rom_path.parent_path();
     std::string log_path = (rom_dir / "nes_emulator.log").string();
 
     log.open(log_path);
 
-    if (!log) {
+    if (!log) 
+    {
         throw std::runtime_error("Failed to open log file");
     }
 }
 
-void NES::reset() {
-    // Reset system clock counter (optional but recommended)
-    systemClockCounter = 0;
-    // Reset all components
+void NES::reset() 
+{
+    bus.reset();
     //cart.reset();
     ppu.reset();
     apu.reset();
@@ -41,51 +48,40 @@ void NES::reset() {
 
 void NES::clock()
 {
-    if (bus.dmaActive)
+    // 1. Clock PPU every master cycle
+    ppu.clock();
+
+    // -------------------------------------------------
+    // 2. Detect NMI edge (PPU -> CPU)
+    // -------------------------------------------------
+
+    static bool prevNMILine = false;
+
+    bool currentNMILine = ppu.nmiLine;
+
+    // Rising edge detection
+    if (currentNMILine && !prevNMILine)
     {
-        bus.clockDMA();
+        cpu.requestNMI();   // latch request (do NOT execute immediately)
     }
-    else
+
+    prevNMILine = currentNMILine;
+
+    // -------------------------------------------------
+    // 3. CPU runs every 3 PPU cycles
+    // -------------------------------------------------
+
+    if (bus.systemClockCounter % 3 == 0)
     {
-        #pragma region CPU Clock (cpu.clock()))
-        if (cpu.cycles == 0)
+        if (bus.dmaActive)
         {
-            cpu.logState(log, ppu.cpuDataBus, ppu.PPUSTATUS, romPath, ppu.scanline, ppu.cycle);
-
-            cpu.opcode = cpu.read(cpu.PC++);
-
-            auto& inst = cpu.lookup[cpu.opcode];
-
-            ppu.clocks(inst.cycles);
-
-            bool extraCycles1 = (cpu.*inst.addrmode)() == 1;
-            bool extraCycles2 = (cpu.*inst.operate)() == 1;
-            uint8_t extraCycle = (extraCycles1 && extraCycles2) ? 1 : 0;
-
-            cpu.totalCycles += inst.cycles + extraCycle;
-            ppu.clocks(extraCycle);
+            bus.clockDMA();
         }
         else
         {
-            ppu.clock();
-            ppu.clock();
-            ppu.clock();
-
-            cpu.totalCycles++;
-
-            cpu.cycles--;
-        }
-        #pragma endregion
-
-        if (cpu.complete())
-        {
-            if (ppu.nmi)
-            {
-                ppu.nmi = false;
-                cpu.nmi();
-            }
+            cpu.clock(log, romPath);
         }
     }
-    apu.clock();
-}
 
+    bus.systemClockCounter++;
+}
