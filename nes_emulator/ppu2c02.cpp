@@ -1,9 +1,16 @@
 #include "ppu2c02.h"
 #include <iostream>
+#include "bus.h"
+#include "cartridge.h"
 
 
-PPU2C02::PPU2C02() {
+PPU2C02::PPU2C02() 
+{
+}
 
+void PPU2C02::connectBus(Bus* bus)
+{
+    this->bus = bus;
 }
 
 void PPU2C02::reset()
@@ -21,44 +28,46 @@ void PPU2C02::reset()
 
     scanline = 0;
     cycle = 0;
+
     frame = 0;
 
-    nmi = false;
+    nmiLine = false;
 }
 
 // https://www.nesdev.org/wiki/PPU_registers
-uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
+uint8_t PPU2C02::cpuRead(uint16_t addr)
 {
-    uint8_t data = 0x00;
+    uint8_t data = openBus;
 
     switch (addr & 7)
     {
-    case 2: // $2002
-        //reading bits 7,6,5 from PpuStatus and bits 4,3,2,1,0 from OpenBus (CpuDataBus)
+    case 2: // $2002 PPUSTATUS
+    {
+        data = (openBus & 0x1F) | (vblankFlag << 7);
+
+        // Clear VBlank flag
+        vblankFlag = false;
+        PPUSTATUS &= ~0x80;
+
+        nmiOccurred = false;
+
+        // Clear address latch
         write_latch = false;
-        data = (PPUSTATUS & 0xE0) | (cpuDataBus & 0x1F);
-        if (data & 0x80)
-            PPUSTATUS &= 0x60;
-        // race conditions
-        if (scanline == 241)
-        {
-            if ((cycle == 0))
-                data &= ~0x80; //unset VBlank
-            if (cycle < 3)
-                nmi = false;
-        }
-        cpuDataBus = data;
-        break;
 
-    case 4: // $2004
-        data = 0x00; // sprites later
-        cpuDataBus = data;
-        break;
+        // NMI suppression window
+        if (scanline == 241 && cycle == 0)
+            nmiLine = false;
 
-    case 7: // $2007
+        break;
+    }
+
+    case 7: // $2007 PPUDATA
+    {
         data = data_buffer;
+
         data_buffer = ppuRead(vram_addr);
 
+        // Palette reads are NOT buffered
         if (vram_addr >= 0x3F00)
             data = data_buffer;
 
@@ -66,42 +75,50 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
         break;
     }
 
+    default:
+        break;
+    }
+
+    openBus = data;
     return data;
 }
 
-void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
-
-    cpuDataBus = data;
+void PPU2C02::cpuWrite(uint16_t addr, uint8_t data)
+{
+    openBus = data;
 
     switch (addr & 7)
     {
-    case 0: // $2000
-        if ((data & 0x80) && !(PPUCTRL & 0x80) && (PPUSTATUS & 0x80) && (scanline != -1))
-            nmi = true;
-        // race condition
-        if ((scanline == 241) && !(data & 0x80) && (cycle < 3))
-            nmi = false;
+    case 0: // $2000 PPUCTRL
+    {
+        bool oldOutput = nmiOutput;
+
         PPUCTRL = data;
+        nmiOutput = data & 0x80;
+
         tram_addr = (tram_addr & 0xF3FF) | ((data & 0x03) << 10);
-        break;
 
-    case 1: // $2001
+        // Immediate NMI if enabling during VBlank
+        if (!oldOutput && nmiOutput && vblankFlag)
+        {
+            if (!(scanline == 241 && cycle == 0))
+                nmiOccurred = true;
+        }
+        break;
+    }
+    case 1: // $2001 PPUMASK
         PPUMASK = data;
-        isRendering = ((PPUMASK & 0x18) && (scanline < 240));
         break;
 
-    case 2: // $2002 (read only)
-        break;
-
-    case 3: // $2003
+    case 3: // $2003 OAMADDR
         OAMADDR = data;
         break;
 
-    case 4: // $2004
-        // ignore for now
+    case 4: // $2004 OAMDATA
+        oam[OAMADDR++] = data;
         break;
 
-    case 5: // $2005
+    case 5: // $2005 PPUSCROLL
         if (!write_latch)
         {
             fine_x = data & 7;
@@ -116,7 +133,7 @@ void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
         }
         break;
 
-    case 6: // $2006
+    case 6: // $2006 PPUADDR
         if (!write_latch)
         {
             tram_addr = (tram_addr & 0x00FF) | ((data & 0x3F) << 8);
@@ -130,7 +147,7 @@ void PPU2C02::cpuWrite(uint16_t addr, uint8_t data) {
         }
         break;
 
-    case 7: // $2007
+    case 7: // $2007 PPUDATA
         ppuWrite(vram_addr, data);
         vram_addr += (PPUCTRL & 0x04) ? 32 : 1;
         break;
@@ -142,78 +159,114 @@ uint8_t PPU2C02::ppuRead(uint16_t addr)
     addr &= 0x3FFF;
 
     if (addr <= 0x1FFF)
-        return tblPattern[(addr >> 12) & 1][addr & 0x0FFF];
+    {
+        return bus->ppuRead(addr);
+    }
     else if (addr <= 0x3EFF)
-        return tblName[(addr >> 10) & 1][addr & 0x03FF];
-    else
-        return tblPalette[addr & 0x1F];
-}
+    {
+        addr &= 0x0FFF;
 
+        if (bus->cart->GetMapper()->Mirror() == HORIZONTAL)
+        {
+            if (addr < 0x400) return tblName[0][addr & 0x03FF];
+            if (addr < 0x800) return tblName[0][addr & 0x03FF];
+            if (addr < 0xC00) return tblName[1][addr & 0x03FF];
+            return tblName[1][addr & 0x03FF];
+        }
+        else
+        {
+            if (addr < 0x400) return tblName[0][addr & 0x03FF];
+            if (addr < 0x800) return tblName[1][addr & 0x03FF];
+            if (addr < 0xC00) return tblName[0][addr & 0x03FF];
+            return tblName[1][addr & 0x03FF];
+        }
+    }
+    else if (addr <= 0x3FFF)
+    {
+        addr &= 0x1F;
+        if (addr == 0x10) addr = 0x00;
+        if (addr == 0x14) addr = 0x04;
+        if (addr == 0x18) addr = 0x08;
+        if (addr == 0x1C) addr = 0x0C;
+        return tblPalette[addr];
+    }
+
+    return 0;
+}
 
 void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
 {
     addr &= 0x3FFF;
 
     if (addr <= 0x1FFF)
-        tblPattern[(addr >> 12) & 1][addr & 0x0FFF] = data;
+    {
+        bus->cart->ppuWrite(addr, data);
+    }
     else if (addr <= 0x3EFF)
-        tblName[(addr >> 10) & 1][addr & 0x03FF] = data;
-    else
-        tblPalette[addr & 0x1F] = data;
-}
+    {
+        addr &= 0x0FFF;
 
-void PPU2C02::clocks(int cpuCycles) {
-    for (int i = 0; i < cpuCycles * 3; i++) {
-        clock();
+        if (bus->cart->GetMapper()->Mirror() == HORIZONTAL)
+        {
+            if (addr < 0x400) tblName[0][addr & 0x03FF] = data;
+            else if (addr < 0x800) tblName[0][addr & 0x03FF] = data;
+            else if (addr < 0xC00) tblName[1][addr & 0x03FF] = data;
+            else tblName[1][addr & 0x03FF] = data;
+        }
+        else
+        {
+            if (addr < 0x400) tblName[0][addr & 0x03FF] = data;
+            else if (addr < 0x800) tblName[1][addr & 0x03FF] = data;
+            else if (addr < 0xC00) tblName[0][addr & 0x03FF] = data;
+            else tblName[1][addr & 0x03FF] = data;
+        }
+    }
+    else if (addr <= 0x3FFF)
+    {
+        addr &= 0x1F;
+        if (addr == 0x10) addr = 0x00;
+        if (addr == 0x14) addr = 0x04;
+        if (addr == 0x18) addr = 0x08;
+        if (addr == 0x1C) addr = 0x0C;
+        tblPalette[addr] = data;
     }
 }
 
 void PPU2C02::clock()
 {
-    // Advance PPU timing
     cycle++;
 
-    if (cycle == 338)
-    {
-        scanlineLength = (scanline == -1 && shortScanline && isRendering) ? 340 : 341;
-    }
-    else if (cycle == scanlineLength)
+    if (cycle >= 341)
     {
         cycle = 0;
         scanline++;
 
-        if (scanline == 240)
+        if (scanline >= 262)
         {
-            isRendering = false;
-        }
-        else if (scanline == 241) // VBlank start
-        {
-            PPUSTATUS |= 0x80; //Set VBlank
-            if (PPUCTRL & 0x80)
-                nmi = true; // Enable NMI if PPUCTRL has bit 7 set
-        }
-        else if (scanline == 261)
-        {
+            scanline = 0;
             frame++;
-            scanline = -1;
-            shortScanline = !shortScanline;
-            isRendering = (PPUMASK & 0x18) > 0;
-            PPUSTATUS &= ~0x60; // Sprite flags are cleared immediately
         }
-    }
-    else if ((scanline == -1) && (cycle == 1))
-    {
-        // VBL flag gets cleared a cycle late
-        PPUSTATUS &= ~0x80;
     }
 
-    // Pre-render line (scanline 261, cycle 1)
-    // Clear VBlank and sprite flags
+    // VBlank start
+    if (scanline == 241 && cycle == 1)
+    {
+        vblankFlag = true;
+        PPUSTATUS |= 0x80;
+
+        if (nmiOutput)
+            nmiOccurred = true;
+    }
+
+    // Pre-render line
     if (scanline == 261 && cycle == 1)
     {
-        PPUSTATUS &= ~(uint8_t)PPU_Status::VBlank;
-        PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteZero;
-        PPUSTATUS &= ~(uint8_t)PPU_Status::SpriteOverflow;
-    }
-}
+        vblankFlag = false;
+        PPUSTATUS &= ~0x80;
 
+        nmiOccurred = false;
+    }
+
+    // NMI line is AND of internal wires
+    nmiLine = nmiOccurred && nmiOutput;
+}

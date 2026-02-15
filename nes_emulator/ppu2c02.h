@@ -2,27 +2,38 @@
 #include <cstdint>
 
 
+class Bus;
+
 //Picture Processing Unit
-class PPU2C02 {
+class PPU2C02 
+{
 public:
     PPU2C02();
 
+    void connectBus(Bus* bus);
     void reset();
-    uint8_t cpuRead(uint16_t addr, bool readOnly = false);
+    uint8_t cpuRead(uint16_t addr);
     void    cpuWrite(uint16_t addr, uint8_t data);
     void    clock();
-    void    clocks(int cpuCycles);
     uint8_t ppuRead(uint16_t addr);
     void    ppuWrite(uint16_t addr, uint8_t data);
 
+    // BUS interface
+    Bus* bus = nullptr;
+
+    // Timing
     int cycle           = 0;        // dot (0–340)
     int scanline        = 0;        // 0–261
-    uint64_t frame      = 0;        // current frame
-    bool shortScanline  = true;     // Nintendulator logic
-    int scanlineLength  = 341;      // Nintendulator logic
-    bool isRendering    = false;    // Nintendulator logic
+    int frame           = 0;        // current frame
 
-    bool nmi            = false;    // Non-Maskable Interrupt
+    // NMI internal wires (hardware style)
+    bool vblankFlag     = false;    // corresponds to $2002 bit 7
+    bool nmiOutput      = false;    // PPUCTRL bit 7
+    bool nmiOccurred    = false;    // internal latch
+    bool nmiLine        = false;    // final output to CPU
+
+    // Open bus
+    uint8_t openBus     = 0;
 
     // Registers
     uint8_t PPUCTRL     = 0x00;     // $2000    
@@ -30,6 +41,7 @@ public:
     uint8_t PPUSTATUS   = 0x00;     // $2002   PPU Status Flags
     uint8_t OAMADDR     = 0x00;     // $2003   Object Attribute Memory Address
 
+    // VRAM
     uint16_t vram_addr  = 0;        // Current VRAM address
     uint16_t tram_addr  = 0;        // Temporary VRAM address
     uint8_t fine_x      = 0;        // Fine X scroll
@@ -110,7 +122,8 @@ public:
 
     uint8_t cpuDataBus = 0x00;
 
-    enum class PPU_Status : uint8_t {
+    enum class PPU_Status : uint8_t 
+    {
         SpriteOverflow  = 0x20,
         SpriteZero      = 0x40,
         VBlank          = 0x80
