@@ -18,6 +18,8 @@ public:
     bool ppuRead(uint16_t addr, uint8_t& data);
     bool ppuWrite(uint16_t addr, uint8_t data);
 
+    IMapper* GetMapper() const { return mapper.get(); }
+
     bool irq = false;
 
 private:
