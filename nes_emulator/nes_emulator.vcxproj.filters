@@ -52,6 +52,9 @@
     <ClCompile Include="mapper1_mmc1.cpp">
       <Filter>mapper</Filter>
     </ClCompile>
+    <ClCompile Include="mapper0_nrom.cpp">
+      <Filter>mapper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu6502.h">
@@ -79,6 +82,9 @@
       <Filter>mapper</Filter>
     </ClInclude>
     <ClInclude Include="IMapper.h">
+      <Filter>mapper</Filter>
+    </ClInclude>
+    <ClInclude Include="mapper0_nrom.h">
       <Filter>mapper</Filter>
     </ClInclude>
   </ItemGroup>

@@ -129,6 +129,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="bus.cpp" />
     <ClCompile Include="cpu6502.cpp" />
+    <ClCompile Include="mapper0_nrom.cpp" />
     <ClCompile Include="mapper1_mmc1.cpp" />
     <ClCompile Include="mapper4_mmc3.cpp" />
     <ClCompile Include="nes.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="cartridge.h" />
     <ClInclude Include="cpu6502.h" />
     <ClInclude Include="IMapper.h" />
+    <ClInclude Include="mapper0_nrom.h" />
     <ClInclude Include="mapper1_mmc1.h" />
     <ClInclude Include="mapper4_mmc3.h" />
     <ClInclude Include="nes.h" />
