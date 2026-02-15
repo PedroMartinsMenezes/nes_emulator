@@ -2,7 +2,9 @@
 #include <cstdint>
 
 
-class Mapper4_MMC3 {
+//@@@ add the IMapper
+class Mapper4_MMC3 
+{
 public:
     Mapper4_MMC3();
 
