@@ -2,6 +2,7 @@
 #include <iostream>
 #include "bus.h"
 #include "cartridge.h"
+#include "cpu6502.h"
 
 
 PPU2C02::PPU2C02() 
@@ -37,26 +38,29 @@ void PPU2C02::reset()
 // https://www.nesdev.org/wiki/PPU_registers
 uint8_t PPU2C02::cpuRead(uint16_t addr)
 {
-    uint8_t data = openBus;
+    uint8_t data = cpuDataBus;
 
     switch (addr & 7)
     {
     case 2: // $2002 PPUSTATUS
     {
-        data = (openBus & 0x1F) | (vblankFlag << 7);
+        // Start with actual register
+        data = PPUSTATUS;
 
-        // Clear VBlank flag
-        vblankFlag = false;
+        // Replace lower 5 bits with open bus
+        data = (data & 0xE0) | (cpuDataBus & 0x1F);
+
+        // Clear VBlank
         PPUSTATUS &= ~0x80;
-
+        vblankFlag = false;
         nmiOccurred = false;
 
-        // Clear address latch
+        // Clear write toggle
         write_latch = false;
 
         // NMI suppression window
-        if (scanline == 241 && cycle == 0)
-            nmiLine = false;
+        //if (scanline == 241 && cycle == 0)
+        //    nmiLine = false;
 
         break;
     }
@@ -79,13 +83,13 @@ uint8_t PPU2C02::cpuRead(uint16_t addr)
         break;
     }
 
-    openBus = data;
+    cpuDataBus = data;
     return data;
 }
 
 void PPU2C02::cpuWrite(uint16_t addr, uint8_t data)
 {
-    openBus = data;
+    cpuDataBus = data;
 
     switch (addr & 7)
     {
@@ -249,7 +253,7 @@ void PPU2C02::clock()
     }
 
     // VBlank start
-    if (scanline == 241 && cycle == 1)
+    if (scanline == 241 && cycle == 0)
     {
         vblankFlag = true;
         PPUSTATUS |= 0x80;

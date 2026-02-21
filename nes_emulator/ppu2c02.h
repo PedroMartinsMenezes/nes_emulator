@@ -33,7 +33,7 @@ public:
     bool nmiLine        = false;    // final output to CPU
 
     // Open bus
-    uint8_t openBus     = 0;
+    uint8_t cpuDataBus = 0x00;
 
     // Registers
     uint8_t PPUCTRL     = 0x00;     // $2000    
@@ -118,9 +118,7 @@ public:
     // | 1–0 | Palette select                  | 
     // +-----+---------------------------------+
     uint8_t sprite_attr[8];
-
-
-    uint8_t cpuDataBus = 0x00;
+    
 
     enum class PPU_Status : uint8_t 
     {
