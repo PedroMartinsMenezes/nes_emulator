@@ -43,7 +43,7 @@ uint8_t Bus::cpuRead(uint16_t addr)
         return data;
     }
 
-    return cpuDataBus; // open bus
+    return cpuDataBus;
 }
 
 void Bus::cpuWrite(uint16_t addr, uint8_t data)
@@ -66,10 +66,9 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data)
     if (addr == 0x4014)
     {
         dmaPage = data;
-        dmaAddr = 0x00;
+        dmaAddr = 0;
         dmaActive = true;
         dmaDummy = true;
-        return;
     }
 }
 
@@ -97,7 +96,7 @@ void Bus::clockDMA()
         ppu->writeOAM(dmaAddr, dmaData);
         dmaAddr++;
 
-        if (dmaAddr == 0x00)
+        if (dmaAddr == 0)
         {
             dmaActive = false;
             dmaDummy = true;

@@ -25,21 +25,15 @@ public:
 private:
     NES* nes = nullptr;
 
-    // Registers
     uint8_t PPUCTRL = 0;
     uint8_t PPUMASK = 0;
     uint8_t PPUSTATUS = 0;
     uint8_t OAMADDR = 0;
 
-    // Memory
     uint8_t oam[256]{};
-    uint8_t secondaryOAM[32]{};
     uint8_t vram[2048]{};
     uint8_t palette[32]{};
 
-    uint8_t spriteCount = 0;
-
-    // VRAM registers
     uint16_t v = 0;
     uint16_t t = 0;
     uint8_t  x = 0;
@@ -48,27 +42,6 @@ private:
     uint8_t bufferedData = 0;
     uint8_t ppuDataBus = 0;
 
-    // Background pipeline
-    uint8_t bgNextTileID = 0;
-    uint8_t bgNextTileAttrib = 0;
-    uint8_t bgNextTileLsb = 0;
-    uint8_t bgNextTileMsb = 0;
-
-    uint16_t bgShifterPatternLow = 0;
-    uint16_t bgShifterPatternHigh = 0;
-    uint16_t bgShifterAttribLow = 0;
-    uint16_t bgShifterAttribHigh = 0;
-
-    // Sprite pipeline
-    uint8_t spritePatternLow[8]{};
-    uint8_t spritePatternHigh[8]{};
-    uint8_t spriteXCounter[8]{};
-    uint8_t spriteAttributes[8]{};
-
-    // Pixel output
-    uint8_t frameBuffer[240][256]{};
-
-    // NMI
     bool nmiOccurred = false;
     bool nmiOutput = false;
     bool nmiPrevious = false;
@@ -77,14 +50,4 @@ private:
 
 private:
     void updateNMI();
-
-    void incrementCoarseX();
-    void incrementFineY();
-    void transferHorizontal();
-    void transferVertical();
-
-    void loadBackgroundShifters();
-    void updateShifters();
-
-    void renderPixel();
 };
