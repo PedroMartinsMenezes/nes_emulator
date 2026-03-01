@@ -88,6 +88,9 @@ private:
 
     void    buildOpcodeTable();
 
+    std::string disassemble(uint16_t addr);
+    void logState(std::ostream& os, uint16_t pc_before);
+
     // Addressing modes
     uint8_t IMP();
     uint8_t IMM();
@@ -169,4 +172,18 @@ private:
     uint8_t BCS();
     uint8_t BVC();
     uint8_t BVS();
+
+    // Illegal opcodes
+    uint8_t SLO();
+    uint8_t RLA();
+    uint8_t SRE();
+    uint8_t RRA();
+    uint8_t DCP();
+    uint8_t ISC();
+    uint8_t LAX();
+    uint8_t SAX();
+    uint8_t ANC();
+    uint8_t ALR();
+    uint8_t ARR();
+    uint8_t KIL();
 };

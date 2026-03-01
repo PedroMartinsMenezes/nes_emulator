@@ -7,6 +7,8 @@ CPU6502::CPU6502()
     buildOpcodeTable();
 }
 
+
+
 void CPU6502::connectBus(Bus* b) { bus = b; }
 void CPU6502::setNES(NES* n) { nes = n; }
 
@@ -360,6 +362,26 @@ void CPU6502::buildOpcodeTable()
     lookup[0xB0] = { "BCS", &CPU6502::BCS, &CPU6502::REL, 2 };
     lookup[0x50] = { "BVC", &CPU6502::BVC, &CPU6502::REL, 2 };
     lookup[0x70] = { "BVS", &CPU6502::BVS, &CPU6502::REL, 2 };
+
+    // Illegal Opcodes
+    lookup[0x03] = { "SLO", &CPU6502::SLO, &CPU6502::IZX, 8 };
+    lookup[0x07] = { "SLO", &CPU6502::SLO, &CPU6502::ZP0, 5 };
+    lookup[0x0F] = { "SLO", &CPU6502::SLO, &CPU6502::ABS, 6 };
+
+    lookup[0x23] = { "RLA", &CPU6502::RLA, &CPU6502::IZX, 8 };
+    lookup[0x27] = { "RLA", &CPU6502::RLA, &CPU6502::ZP0, 5 };
+
+    lookup[0x47] = { "SRE", &CPU6502::SRE, &CPU6502::ZP0, 5 };
+    lookup[0x63] = { "RRA", &CPU6502::RRA, &CPU6502::IZX, 8 };
+
+    lookup[0xA7] = { "LAX", &CPU6502::LAX, &CPU6502::ZP0, 3 };
+    lookup[0x87] = { "SAX", &CPU6502::SAX, &CPU6502::ZP0, 3 };
+
+    lookup[0x0B] = { "ANC", &CPU6502::ANC, &CPU6502::IMM, 2 };
+    lookup[0x4B] = { "ALR", &CPU6502::ALR, &CPU6502::IMM, 2 };
+    lookup[0x6B] = { "ARR", &CPU6502::ARR, &CPU6502::IMM, 2 };
+
+    lookup[0x02] = { "KIL", &CPU6502::KIL, &CPU6502::IMP, 2 };
 }
 
 // Arithmetic / Logic
@@ -565,7 +587,7 @@ uint8_t CPU6502::CLD() { SetFlag(D, false); return 0; }
 uint8_t CPU6502::SED() { SetFlag(D, true);  return 0; }
 
 
-// Aritimetic Shifts and Rotations
+// Arithmetic Shifts and Rotations
 
 
 uint8_t CPU6502::ASL()
@@ -743,3 +765,134 @@ uint8_t CPU6502::BVS()
     return 0;
 }
 
+#pragma region Illegal Opcodes
+
+// SLO (ASL + ORA)
+uint8_t CPU6502::SLO()
+{
+    ASL();
+    ORA();
+    return 0;
+}
+
+// RLA (ROL + AND)
+uint8_t CPU6502::RLA()
+{
+    ROL();
+    AND();
+    return 0;
+}
+
+// SRE (LSR + EOR)
+uint8_t CPU6502::SRE()
+{
+    LSR();
+    EOR();
+    return 0;
+}
+
+// RRA (ROR + ADC)
+uint8_t CPU6502::RRA()
+{
+    ROR();
+    ADC();
+    return 0;
+}
+
+// DCP (DEC + CMP)
+uint8_t CPU6502::DCP()
+{
+    DEC();
+    CMP();
+    return 0;
+}
+
+// ISC (INC + SBC)
+uint8_t CPU6502::ISC()
+{
+    INC();
+    SBC();
+    return 0;
+}
+
+// LAX(LDA + LDX)
+uint8_t CPU6502::LAX()
+{
+    fetch();
+    A = X = fetched;
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    return 1;
+}
+
+// SAX (A & X store)
+uint8_t CPU6502::SAX()
+{
+    write(addr_abs, A & X);
+    return 0;
+}
+
+uint8_t CPU6502::ANC()
+{
+    fetch();
+    A &= fetched;
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    SetFlag(C, A & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::ALR()
+{
+    fetch();
+    A &= fetched;
+    SetFlag(C, A & 0x01);
+    A >>= 1;
+    SetFlag(Z, A == 0);
+    SetFlag(N, false);
+    return 0;
+}
+
+uint8_t CPU6502::ARR()
+{
+    fetch();
+    A &= fetched;
+    A = (A >> 1) | (GetFlag(C) << 7);
+
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    SetFlag(C, A & 0x40);
+    SetFlag(V, ((A >> 6) ^ (A >> 5)) & 1);
+
+    return 0;
+}
+
+uint8_t CPU6502::KIL()
+{
+    cycles = 0xFF;
+    return 0;
+}
+
+#pragma endregion
+
+std::string CPU6502::disassemble(uint16_t addr)
+{
+    uint8_t op = bus->cpuRead(addr);
+    const auto& inst = lookup[op];
+
+    char buffer[64];
+    sprintf(buffer, "%04X  %02X  %s", addr, op, inst.name);
+    return std::string(buffer);
+}
+
+void CPU6502::logState(std::ostream& os, uint16_t pc_before)
+{
+    os << disassemble(pc_before)
+        << "  A:" << std::hex << (int)A
+        << " X:" << (int)X
+        << " Y:" << (int)Y
+        << " P:" << (int)P
+        << " SP:" << (int)SP
+        << " CYC:" << totalCycles
+        << "\n";
+}
