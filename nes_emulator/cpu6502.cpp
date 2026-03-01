@@ -1,6 +1,7 @@
 #include "cpu6502.h"
 #include "bus.h"
 #include "nes.h"
+#include <ostream>
 
 CPU6502::CPU6502()
 {
