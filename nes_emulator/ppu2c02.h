@@ -20,36 +20,38 @@ public:
     void writeOAM(uint8_t addr, uint8_t data);
 
 public:
-    int cycle = 0;
-    int scanline = 0;
-    int frame = 0;
+    int16_t scanline = 0;
+    int16_t cycle = 0;
+    uint64_t frame = 0;
 
 private:
     NES* nes = nullptr;
 
     // Registers
-    uint8_t PPUCTRL = 0x00;
-    uint8_t PPUMASK = 0x00;
-    uint8_t PPUSTATUS = 0x00;
-    uint8_t OAMADDR = 0x00;
+    uint8_t PPUCTRL = 0;
+    uint8_t PPUMASK = 0;
+    uint8_t PPUSTATUS = 0;
+    uint8_t OAMADDR = 0;
 
-    uint8_t oam[256];
+    // Memory
+    uint8_t oam[256]{};
+    uint8_t vram[2048]{};
+    uint8_t palette[32]{};
 
-    // VRAM
-    uint8_t vram[2048];
-    uint8_t palette[32];
+    // VRAM address registers
+    uint16_t v = 0;
+    uint16_t t = 0;
+    uint8_t  x = 0;
+    bool     w = false;
 
-    uint16_t v = 0;  // current VRAM address
-    uint16_t t = 0;  // temp VRAM address
-    uint8_t  x = 0;  // fine X scroll
-    bool     w = false; // write toggle
+    uint8_t bufferedData = 0;
 
-    uint8_t bufferedData = 0x00;
-
-    // NMI
+    // NMI logic
     bool nmiOccurred = false;
     bool nmiOutput = false;
     bool nmiPrevious = false;
+
+    bool oddFrame = false;
 
 private:
     void updateNMI();
