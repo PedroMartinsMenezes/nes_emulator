@@ -44,7 +44,7 @@ void NES::run()
 void NES::runFrame()
 {
     // Run until PPU completes one frame
-    int startingFrame = ppu.frame;
+    uint64_t startingFrame = ppu.frame;
 
     while (ppu.frame == startingFrame)
     {

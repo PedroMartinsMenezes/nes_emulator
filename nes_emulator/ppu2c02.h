@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cstdint>
 
 class NES;
@@ -8,7 +7,6 @@ class PPU2C02
 {
 public:
     PPU2C02();
-
     void connectNES(NES* n);
 
     void reset();
@@ -50,11 +48,21 @@ private:
     uint8_t bufferedData = 0;
     uint8_t ppuDataBus = 0;
 
-    // Background fetch
+    // Background pipeline
     uint8_t bgNextTileID = 0;
     uint8_t bgNextTileAttrib = 0;
     uint8_t bgNextTileLsb = 0;
     uint8_t bgNextTileMsb = 0;
+
+    uint16_t bgShifterPatternLow = 0;
+    uint16_t bgShifterPatternHigh = 0;
+    uint16_t bgShifterAttribLow = 0;
+    uint16_t bgShifterAttribHigh = 0;
+
+    // Sprite pipeline
+    uint8_t spritePatternLow[8]{};
+    uint8_t spritePatternHigh[8]{};
+    uint8_t spriteXCounter[8]{};
 
     // NMI
     bool nmiOccurred = false;
@@ -65,4 +73,12 @@ private:
 
 private:
     void updateNMI();
+
+    void incrementCoarseX();
+    void incrementFineY();
+    void transferHorizontal();
+    void transferVertical();
+
+    void loadBackgroundShifters();
+    void updateShifters();
 };
