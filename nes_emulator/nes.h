@@ -1,30 +1,39 @@
 #pragma once
+
+#include <cstdint>
+#include <memory>
+
 #include "cpu6502.h"
 #include "ppu2c02.h"
 #include "apu2a03.h"
-#include "cartridge.h"
 #include "bus.h"
-#include <fstream>
-#include <string>
+#include "cartridge.h"
 
-class NES 
+class NES
 {
 public:
-    NES(const std::string& romPath);
+    NES();
     ~NES();
 
+public:
+    bool insertCartridge(const std::shared_ptr<Cartridge>& cart);
     void reset();
-    void clock();
 
+    // Main execution loop (Nintendulator style)
+    void runFrame();       // Run until one frame completes
+    void run();            // Continuous execution
+
+    // Called once per CPU cycle (from CPU::RunCycle)
+    void clockCPU();
+
+public:
     CPU6502 cpu;
     PPU2C02 ppu;
     APU2A03 apu;
-    Cartridge cart;
     Bus bus;
 
-    std::ofstream log;
-    std::string romPath;
-
 private:
-    void open_log(const std::string& romPath);
+    std::shared_ptr<Cartridge> cartridge;
+
+    bool running = false;
 };

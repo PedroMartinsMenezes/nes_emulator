@@ -1,87 +1,75 @@
 #include "nes.h"
-#include <filesystem>
-#include <string>
-#include <iostream>
-namespace fs = std::filesystem;
 
-
-NES::NES(const std::string& romPath)
-:
-    cart(romPath)
+NES::NES()
 {
-    bus.cpu = &cpu;
-    bus.ppu = &ppu;
-    bus.cart = &cart;
+    // Connect bus
+    bus.connectCPU(&cpu);
+    bus.connectPPU(&ppu);
+    bus.connectAPU(&apu);
+
     cpu.connectBus(&bus);
-    ppu.connectBus(&bus);
-    this->romPath = romPath;
-    open_log(romPath);
+
+    // CPU needs access to NES for timing
+    cpu.setNES(this);
 }
 
-NES::~NES() 
+NES::~NES()
 {
-    log.close();
 }
 
-void NES::open_log(const std::string& romPath) 
+bool NES::insertCartridge(const std::shared_ptr<Cartridge>& cart)
 {
-    fs::path rom_path = romPath;
-    fs::path rom_dir = rom_path.parent_path();
-    std::string log_path = (rom_dir / "nes_emulator.log").string();
-
-    log.open(log_path);
-
-    if (!log) 
-    {
-        throw std::runtime_error("Failed to open log file");
-    }
+    cartridge = cart;
+    bus.insertCartridge(cart);
+    return true;
 }
 
-void NES::reset() 
+void NES::reset()
 {
-    bus.reset();
-    //cart.reset();
+    cpu.reset();
     ppu.reset();
     apu.reset();
-    cpu.reset();
 }
 
-void NES::clock()
+void NES::run()
 {
-    // 1. Clock PPU every master cycle
+    running = true;
+
+    while (running)
+    {
+        cpu.ExecOp(); //  All timing happens inside MemRead/MemWrite
+    }
+}
+
+void NES::runFrame()
+{
+    // Run until PPU completes one frame
+    int startingFrame = ppu.frameCounter;
+
+    while (ppu.frameCounter == startingFrame)
+    {
+        cpu.ExecOp();
+    }
+}
+
+void NES::clockCPU()
+{
+    //
+    // This is called once per CPU cycle
+    // (from CPU::RunCycle())
+    //
+
+    // 3 PPU cycles per CPU cycle
+    ppu.clock();
+    ppu.clock();
     ppu.clock();
 
-    // -------------------------------------------------
-    // 2. Detect NMI edge (PPU -> CPU)
-    // -------------------------------------------------
+    // APU runs once per CPU cycle
+    apu.clock();
 
-    static bool prevNMILine = false;
-
-    bool currentNMILine = ppu.nmiLine;
-
-    // Rising edge detection
-    if (currentNMILine && !prevNMILine)
+    // Handle DMA stall if active
+    if (bus.dmaActive)
     {
-        cpu.requestNMI();   // latch request (do NOT execute immediately)
+        bus.clockDMA();
     }
-
-    prevNMILine = currentNMILine;
-
-    // -------------------------------------------------
-    // 3. CPU runs every 3 PPU cycles
-    // -------------------------------------------------
-
-    if (bus.systemClockCounter % 3 == 0)
-    {
-        if (bus.dmaActive)
-        {
-            bus.clockDMA();
-        }
-        else
-        {
-            cpu.clock(log, romPath);
-        }
-    }
-
-    bus.systemClockCounter++;
 }

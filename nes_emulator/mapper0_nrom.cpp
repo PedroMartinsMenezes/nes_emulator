@@ -1,68 +1,46 @@
 #include "mapper0_nrom.h"
 
-Mapper0::Mapper0(uint8_t prgBanks_,
-    uint8_t chrBanks_,
-    std::vector<uint8_t>& prgROM_,
-    std::vector<uint8_t>& prgRAM_,
-    std::vector<uint8_t>& chrROM_,
-    std::vector<uint8_t>& chrRAM_,
-    MIRROR mirrorMode)
-    : prgBanks(prgBanks_),
-    chrBanks(chrBanks_),
-    prgROM(prgROM_),
-    prgRAM(prgRAM_),
-    chrROM(chrROM_),
-    chrRAM(chrRAM_),
-    mirror(mirrorMode)
+Mapper0_NROM::Mapper0_NROM(const std::vector<uint8_t>& prg,
+    const std::vector<uint8_t>& chr)
+    : prgROM(prg), chrROM(chr)
 {
-    chrIsRam = (chrBanks == 0);
+    is16KB = (prgROM.size() == 16384);
 }
 
-bool Mapper0::cpuRead(uint16_t addr, uint8_t& data)
+void Mapper0_NROM::reset()
+{
+}
+
+bool Mapper0_NROM::cpuRead(uint16_t addr, uint8_t& data)
 {
     if (addr >= 0x8000)
     {
-        if (prgBanks == 1)
-        {
-            // 16KB mirrored
-            data = prgROM[addr & 0x3FFF];
-        }
-        else
-        {
-            // 32KB
-            data = prgROM[addr & 0x7FFF];
-        }
-        return true;
-    }
+        uint32_t mapped = addr - 0x8000;
 
-    if (addr >= 0x6000 && addr < 0x8000)
-    {
-        data = prgRAM[addr & 0x1FFF];
+        if (is16KB)
+            mapped &= 0x3FFF;  // mirror 16KB
+
+        data = prgROM[mapped];
         return true;
     }
 
     return false;
 }
 
-bool Mapper0::cpuWrite(uint16_t addr, uint8_t data)
+bool Mapper0_NROM::cpuWrite(uint16_t addr, uint8_t data)
 {
-    if (addr >= 0x6000 && addr < 0x8000)
-    {
-        prgRAM[addr & 0x1FFF] = data;
-        return true;
-    }
-
+    // NROM is ROM only
     return false;
 }
 
-bool Mapper0::ppuRead(uint16_t addr, uint8_t& data)
+bool Mapper0_NROM::ppuRead(uint16_t addr, uint8_t& data)
 {
     if (addr <= 0x1FFF)
     {
-        if (chrIsRam)
-            data = chrRAM[addr];
-        else
+        if (!chrROM.empty())
             data = chrROM[addr];
+        else
+            data = 0x00;
 
         return true;
     }
@@ -70,24 +48,13 @@ bool Mapper0::ppuRead(uint16_t addr, uint8_t& data)
     return false;
 }
 
-bool Mapper0::ppuWrite(uint16_t addr, uint8_t data)
+bool Mapper0_NROM::ppuWrite(uint16_t addr, uint8_t data)
 {
-    if (addr <= 0x1FFF)
+    // Only writable if CHR-RAM
+    if (addr <= 0x1FFF && chrROM.empty())
     {
-        if (chrIsRam)
-        {
-            chrRAM[addr] = data;
-            return true;
-        }
-
-        // CHR-ROM -> ignore writes
         return true;
     }
 
     return false;
-}
-
-MIRROR Mapper0::Mirror() const
-{
-    return mirror;
 }

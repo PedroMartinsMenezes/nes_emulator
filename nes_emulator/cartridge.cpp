@@ -1,152 +1,126 @@
 #include "cartridge.h"
+
 #include <fstream>
 #include <iostream>
-#include <cassert>
-#include <fstream>
-#include <cstring>
-#include "Cartridge.h"
-#include "mapper1_mmc1.h"
+
 #include "mapper0_nrom.h"
+#include "mapper1_mmc1.h"
 
-
-Cartridge::Cartridge(const std::string& romPath)
+Cartridge::Cartridge(const std::string& filename)
 {
-    std::ifstream file(romPath, std::ios::binary);
-    if (!file)
-        throw std::runtime_error("Failed to open NES file: " + romPath);
+    std::ifstream file(filename, std::ifstream::binary);
 
-    INesHeader header{};
-    file.read(reinterpret_cast<char*>(&header), sizeof(header));
-
-    if (!file)
-        throw std::runtime_error("Failed to read iNES header.");
-
-    // Validate signature
-    if (std::strncmp(header.name, "NES\x1A", 4) != 0)
-        throw std::runtime_error("Invalid iNES file.");
-
-    // Reject NES 2.0 for now
-    if ((header.flags7 & 0x0C) == 0x08)
-        throw std::runtime_error("NES 2.0 format not supported yet.");
-
-    bool hasTrainer = header.flags6 & 0x04;
-
-    if (hasTrainer)
-        file.seekg(512, std::ios::cur);
-
-    // -------------------------------------------------
-    // PRG ROM
-    // -------------------------------------------------
-    const size_t prgSize = header.prgChunks * 16 * 1024;
-    prgROM.resize(prgSize);
-    file.read(reinterpret_cast<char*>(prgROM.data()), prgSize);
-
-    if (!file)
-        throw std::runtime_error("Failed to read PRG ROM.");
-
-    // -------------------------------------------------
-    // CHR
-    // -------------------------------------------------
-    bool chrIsRam = (header.chrChunks == 0);
-
-    if (chrIsRam)
+    if (!file.is_open())
     {
-        chrRAM.resize(8 * 1024); // standard CHR-RAM size
+        std::cout << "Failed to open ROM file\n";
+        return;
+    }
+
+    struct iNESHeader
+    {
+        char name[4];
+        uint8_t prg_rom_chunks;
+        uint8_t chr_rom_chunks;
+        uint8_t mapper1;
+        uint8_t mapper2;
+        uint8_t prg_ram_size;
+        uint8_t tv_system1;
+        uint8_t tv_system2;
+        char unused[5];
+    } header;
+
+    file.read((char*)&header, sizeof(iNESHeader));
+
+    if (header.name[0] != 'N' ||
+        header.name[1] != 'E' ||
+        header.name[2] != 'S')
+    {
+        std::cout << "Invalid iNES file\n";
+        return;
+    }
+
+    mapperID = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+
+    prgBanks = header.prg_rom_chunks;
+    chrBanks = header.chr_rom_chunks;
+
+    // Skip trainer if present
+    if (header.mapper1 & 0x04)
+        file.seekg(512, std::ios_base::cur);
+
+    // Load PRG ROM
+    prgROM.resize(prgBanks * 16384);
+    file.read((char*)prgROM.data(), prgROM.size());
+
+    // Load CHR ROM
+    if (chrBanks == 0)
+    {
+        // CHR RAM (8KB)
+        chrROM.resize(8192);
     }
     else
     {
-        const size_t chrSize = header.chrChunks * 8 * 1024;
-        chrROM.resize(chrSize);
-        file.read(reinterpret_cast<char*>(chrROM.data()), chrSize);
-
-        if (!file)
-            throw std::runtime_error("Failed to read CHR ROM.");
+        chrROM.resize(chrBanks * 8192);
+        file.read((char*)chrROM.data(), chrROM.size());
     }
 
-    // -------------------------------------------------
-    // PRG RAM (default 8KB if unspecified)
-    // -------------------------------------------------
-    // iNES 1.0 default PRG RAM = 8KB
-    prgRAM.resize(8 * 1024);
-
-
-    // -------------------------------------------------
-    // Mapper ID
-    // -------------------------------------------------
-    uint8_t mapperId =
-        (header.flags6 >> 4) |
-        (header.flags7 & 0xF0);
-
-    // -------------------------------------------------
-    // Mirroring from header
-    // -------------------------------------------------
-    bool verticalMirror = header.flags6 & 0x01;
-
-    MIRROR mirror =
-        verticalMirror ? MIRROR::VERTICAL
-        : MIRROR::HORIZONTAL;
-
-    // -------------------------------------------------
-    // Instantiate Mapper
-    // -------------------------------------------------
-    switch (mapperId)
+    switch (mapperID)
     {
-    case 0: // NROM
-        mapper = std::make_unique<Mapper0>(
-            header.prgChunks,
-            header.chrChunks,
-            prgROM,
-            prgRAM,
-            chrROM,
-            chrRAM,
-            mirror
-        );
+    case 0:
+        mapper = std::make_shared<Mapper0_NROM>(prgROM, chrROM);
         break;
 
-    case 1: // MMC1
-        mapper = std::make_unique<Mapper1>(
-            header.prgChunks,
-            header.chrChunks,
-            prgROM,
-            prgRAM,
-            chrROM,
-            chrRAM,
-            chrIsRam,
-            mirror
-        );
+    case 1:
+        mapper = std::make_shared<Mapper1_MMC1>(prgROM, chrROM);
         break;
 
     default:
-        throw std::runtime_error("Unsupported mapper: " + std::to_string(mapperId));
+        std::cout << "Unsupported Mapper: " << (int)mapperID << "\n";
+        return;
     }
 
     valid = true;
 }
 
-// ------------------------------------------------------------
-// CPU interface
-// ------------------------------------------------------------
+bool Cartridge::isValid() const
+{
+    return valid;
+}
 
 bool Cartridge::cpuRead(uint16_t addr, uint8_t& data)
 {
-    return mapper && mapper->cpuRead(addr, data);
+    if (mapper)
+        return mapper->cpuRead(addr, data);
+
+    return false;
 }
 
 bool Cartridge::cpuWrite(uint16_t addr, uint8_t data)
 {
-    return mapper && mapper->cpuWrite(addr, data);
-}
+    if (mapper)
+        return mapper->cpuWrite(addr, data);
 
-// ------------------------------------------------------------
-// PPU interface
-// ------------------------------------------------------------
+    return false;
+}
 
 bool Cartridge::ppuRead(uint16_t addr, uint8_t& data)
 {
-    return mapper && mapper->ppuRead(addr, data);
+    if (mapper)
+        return mapper->ppuRead(addr, data);
+
+    return false;
 }
 
 bool Cartridge::ppuWrite(uint16_t addr, uint8_t data)
 {
-    return mapper && mapper->ppuWrite(addr, data);
+    if (mapper)
+        return mapper->ppuWrite(addr, data);
+
+    return false;
+}
+
+void Cartridge::reset()
+{
+    if (mapper)
+        mapper->reset();
 }

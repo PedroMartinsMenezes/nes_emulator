@@ -36,9 +36,6 @@
     <ClCompile Include="apu2a03.cpp">
       <Filter>apu</Filter>
     </ClCompile>
-    <ClCompile Include="mapper4_mmc3.cpp">
-      <Filter>mapper</Filter>
-    </ClCompile>
     <ClCompile Include="cartridge.cpp">
       <Filter>cartridge</Filter>
     </ClCompile>
@@ -65,9 +62,6 @@
     </ClInclude>
     <ClInclude Include="apu2a03.h">
       <Filter>apu</Filter>
-    </ClInclude>
-    <ClInclude Include="mapper4_mmc3.h">
-      <Filter>mapper</Filter>
     </ClInclude>
     <ClInclude Include="cartridge.h">
       <Filter>cartridge</Filter>

@@ -1,18 +1,15 @@
 #pragma once
 
-#include "IMapper.h"
+#include <cstdint>
 #include <vector>
+#include <memory>
+#include "IMapper.h"
 
-class Mapper0 : public IMapper
+class Mapper0_NROM : public IMapper
 {
 public:
-    Mapper0(uint8_t prgBanks,
-        uint8_t chrBanks,
-        std::vector<uint8_t>& prgROM,
-        std::vector<uint8_t>& prgRAM,
-        std::vector<uint8_t>& chrROM,
-        std::vector<uint8_t>& chrRAM,
-        MIRROR mirrorMode);
+    Mapper0_NROM(const std::vector<uint8_t>& prg,
+        const std::vector<uint8_t>& chr);
 
     bool cpuRead(uint16_t addr, uint8_t& data) override;
     bool cpuWrite(uint16_t addr, uint8_t data) override;
@@ -20,17 +17,11 @@ public:
     bool ppuRead(uint16_t addr, uint8_t& data) override;
     bool ppuWrite(uint16_t addr, uint8_t data) override;
 
-    MIRROR Mirror() const override;
+    void reset() override;
 
 private:
-    uint8_t prgBanks;
-    uint8_t chrBanks;
+    std::vector<uint8_t> prgROM;
+    std::vector<uint8_t> chrROM;
 
-    std::vector<uint8_t>& prgROM;
-    std::vector<uint8_t>& prgRAM;
-    std::vector<uint8_t>& chrROM;
-    std::vector<uint8_t>& chrRAM;
-
-    bool chrIsRam;
-    MIRROR mirror;
+    bool is16KB = false;
 };

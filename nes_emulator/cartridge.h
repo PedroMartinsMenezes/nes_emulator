@@ -1,65 +1,36 @@
 #pragma once
+
 #include <cstdint>
 #include <vector>
-#include <string>
 #include <memory>
+#include <string>
+
 #include "IMapper.h"
 
-struct INesHeader;
-
-class Cartridge {
+class Cartridge
+{
 public:
-    Cartridge(const std::string& romPath);
+    Cartridge(const std::string& filename);
 
-    //void reset();
+    bool isValid() const;
+
     bool cpuRead(uint16_t addr, uint8_t& data);
     bool cpuWrite(uint16_t addr, uint8_t data);
 
     bool ppuRead(uint16_t addr, uint8_t& data);
     bool ppuWrite(uint16_t addr, uint8_t data);
 
-    IMapper* GetMapper() const { return mapper.get(); }
-
-    bool irq = false;
+    void reset();
 
 private:
-    uint32_t decodePRGBanks(const INesHeader& h);
-    uint32_t decodeCHRBanks(const INesHeader& h);
-    bool isNES2(const INesHeader& h);
-
-private:
-    // Program ROM (Store Code and Data)
-    std::vector<uint8_t> prgROM;
-
-    // Character ROM (Store Sprites)
-    std::vector<uint8_t> chrROM;
-
-    // Cartridge PRG-RAM (WRAM / Save RAM)
-    std::vector<uint8_t> prgRAM;
-
-    // Character RAM ?
-    std::vector<uint8_t> chrRAM;
-
-    // For now: NROM only (mapper 0)
-    uint32_t prgBanks = 0;
-    uint32_t chrBanks = 0;
-
-    bool chrIsRAM = false;
     bool valid = false;
 
-    std::unique_ptr<IMapper> mapper;
-};
+    uint8_t mapperID = 0;
+    uint8_t prgBanks = 0;
+    uint8_t chrBanks = 0;
 
-#pragma pack(push, 1)
-struct INesHeader {
-    char name[4];
-    uint8_t prgChunks;
-    uint8_t chrChunks;
-    uint8_t flags6;
-    uint8_t flags7;
-    uint8_t flags8;
-    uint8_t flags9;
-    uint8_t flags10;
-    uint8_t padding[5];
+    std::vector<uint8_t> prgROM;
+    std::vector<uint8_t> chrROM;
+
+    std::shared_ptr<IMapper> mapper;
 };
-#pragma pack(pop)
