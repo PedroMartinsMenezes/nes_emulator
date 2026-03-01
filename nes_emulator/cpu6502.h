@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <array>
-#include <functional>
+#include <string>
 
 class Bus;
 class NES;
@@ -15,64 +15,71 @@ public:
     void connectBus(Bus* b);
     void setNES(NES* n);
 
-    void reset();
     void powerOn();
+    void reset();
 
-    void ExecOp();                 // Executes ONE instruction (full microcycle)
-    void clock();                  // Executes ONE CPU cycle
+    void ExecOp();
+    void clock();
 
     bool instructionComplete() const;
 
-    // Interrupt lines
     void requestNMI();
     void requestIRQ();
 
-    // Logging support
-    uint8_t  GetFlag(uint8_t f) const;
-    void     SetFlag(uint8_t f, bool v);
+    uint8_t GetFlag(uint8_t f) const;
+    void    SetFlag(uint8_t f, bool v);
 
 public:
-    uint8_t A = 0x00;
-    uint8_t X = 0x00;
-    uint8_t Y = 0x00;
+    uint8_t A = 0;
+    uint8_t X = 0;
+    uint8_t Y = 0;
     uint8_t SP = 0xFD;
     uint8_t P = 0x24;
-
-    uint16_t PC = 0x0000;
-
+    uint16_t PC = 0;
     uint64_t totalCycles = 0;
 
 private:
     enum FLAGS6502
     {
-        C = (1 << 0),
-        Z = (1 << 1),
-        I = (1 << 2),
-        D = (1 << 3),
-        B = (1 << 4),
-        U = (1 << 5),
-        V = (1 << 6),
-        N = (1 << 7),
+        C = 1 << 0,
+        Z = 1 << 1,
+        I = 1 << 2,
+        D = 1 << 3,
+        B = 1 << 4,
+        U = 1 << 5,
+        V = 1 << 6,
+        N = 1 << 7,
+    };
+
+    struct INSTRUCTION
+    {
+        const char* name;
+        uint8_t(CPU6502::* operate)(void);
+        uint8_t(CPU6502::* addrmode)(void);
+        uint8_t cycles;
     };
 
 private:
     Bus* bus = nullptr;
     NES* nes = nullptr;
 
-    // Internal execution state
-    uint8_t  opcode = 0x00;
-    uint8_t  fetched = 0x00;
-    uint16_t addr_abs = 0x0000;
-    uint16_t addr_rel = 0x0000;
+    std::array<INSTRUCTION, 256> lookup;
 
-    uint8_t  cycles = 0;
+    uint8_t opcode = 0;
+    uint8_t fetched = 0;
+    uint16_t addr_abs = 0;
+    uint16_t addr_rel = 0;
 
-    bool     nmi_pending = false;
-    bool     irq_pending = false;
+    uint8_t cycles = 0;
+
+    bool nmi_pending = false;
+    bool irq_pending = false;
 
 private:
     uint8_t read(uint16_t addr);
     void    write(uint16_t addr, uint8_t data);
+
+    uint8_t fetch();
 
     void    push(uint8_t v);
     uint8_t pull();
@@ -80,4 +87,30 @@ private:
     void    handleInterrupt(uint16_t vector);
 
     void    buildOpcodeTable();
+
+    // Addressing modes
+    uint8_t IMP();
+    uint8_t IMM();
+    uint8_t ZP0();
+    uint8_t ZPX();
+    uint8_t ZPY();
+    uint8_t ABS();
+    uint8_t ABX();
+    uint8_t ABY();
+    uint8_t REL();
+    uint8_t IND();
+    uint8_t IZX();
+    uint8_t IZY();
+
+    // Official opcodes (core)
+    uint8_t NOP();
+    uint8_t LDA();
+    uint8_t STA();
+    uint8_t TAX();
+    uint8_t INX();
+    uint8_t JMP();
+    uint8_t JSR();
+    uint8_t RTS();
+    uint8_t BRK();
+    uint8_t BNE();
 };
