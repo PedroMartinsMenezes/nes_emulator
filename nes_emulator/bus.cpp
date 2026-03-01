@@ -10,20 +10,9 @@ Bus::Bus()
         b = 0x00;
 }
 
-void Bus::connectCPU(CPU6502* c)
-{
-    cpu = c;
-}
-
-void Bus::connectPPU(PPU2C02* p)
-{
-    ppu = p;
-}
-
-void Bus::connectAPU(APU2A03* a)
-{
-    apu = a;
-}
+void Bus::connectCPU(CPU6502* c) { cpu = c; }
+void Bus::connectPPU(PPU2C02* p) { ppu = p; }
+void Bus::connectAPU(APU2A03* a) { apu = a; }
 
 void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cart)
 {
@@ -34,63 +23,44 @@ uint8_t Bus::cpuRead(uint16_t addr)
 {
     uint8_t data = 0x00;
 
-    // Cartridge space
     if (cartridge && cartridge->cpuRead(addr, data))
         return data;
 
-    // 2KB internal RAM (mirrored every 0x800)
     if (addr <= 0x1FFF)
-    {
         return cpuRam[addr & 0x07FF];
-    }
 
-    // PPU registers (mirrored every 8 bytes)
     if (addr >= 0x2000 && addr <= 0x3FFF)
-    {
-        // Real implementation would call PPU register read
-        return 0x00;
-    }
+        return ppu->cpuRead(addr & 0x0007);
 
-    // APU + I/O
     if (addr >= 0x4000 && addr <= 0x4017)
-    {
         return 0x00;
-    }
 
     return data;
 }
 
 void Bus::cpuWrite(uint16_t addr, uint8_t data)
 {
-    // Cartridge first
     if (cartridge && cartridge->cpuWrite(addr, data))
         return;
 
-    // 2KB internal RAM
     if (addr <= 0x1FFF)
     {
         cpuRam[addr & 0x07FF] = data;
         return;
     }
 
-    // PPU registers (stub)
     if (addr >= 0x2000 && addr <= 0x3FFF)
     {
+        ppu->cpuWrite(addr & 0x0007, data);
         return;
     }
 
-    // DMA trigger
     if (addr == 0x4014)
     {
         dmaPage = data;
         dmaAddr = 0x00;
         dmaActive = true;
-        return;
-    }
-
-    // APU + I/O (stub)
-    if (addr >= 0x4000 && addr <= 0x4017)
-    {
+        dmaDummy = true;
         return;
     }
 }
@@ -100,21 +70,29 @@ void Bus::clockDMA()
     if (!dmaActive)
         return;
 
-    // DMA alternates read/write each CPU cycle
-    if ((cpu->totalCycles % 2) == 0)
+    if (dmaDummy)
     {
-        // Read from CPU memory
+        if (cpu->totalCycles % 2 == 1)
+            return;
+
+        dmaDummy = false;
+        return;
+    }
+
+    if (cpu->totalCycles % 2 == 0)
+    {
         uint16_t addr = (dmaPage << 8) | dmaAddr;
         dmaData = cpuRead(addr);
     }
     else
     {
-        // Write to PPU OAM (not implemented yet)
+        ppu->writeOAM(dmaAddr, dmaData);
         dmaAddr++;
 
         if (dmaAddr == 0x00)
         {
             dmaActive = false;
+            dmaDummy = true;
         }
     }
 }

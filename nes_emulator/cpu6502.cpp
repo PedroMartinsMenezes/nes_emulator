@@ -46,6 +46,14 @@ void CPU6502::ExecOp()
 
 void CPU6502::clock()
 {
+    if (bus->dmaActive)
+    {
+        nes->clockCPU();   // PPU still runs
+        bus->clockDMA();
+        totalCycles++;
+        return;
+    }
+
     if (cycles == 0)
     {
         if (nmi_pending)

@@ -44,9 +44,9 @@ void NES::run()
 void NES::runFrame()
 {
     // Run until PPU completes one frame
-    int startingFrame = ppu.frameCounter;
+    int startingFrame = ppu.frame;
 
-    while (ppu.frameCounter == startingFrame)
+    while (ppu.frame == startingFrame)
     {
         cpu.ExecOp();
     }
