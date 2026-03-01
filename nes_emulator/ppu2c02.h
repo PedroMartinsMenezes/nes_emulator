@@ -35,18 +35,28 @@ private:
 
     // Memory
     uint8_t oam[256]{};
+    uint8_t secondaryOAM[32]{};
     uint8_t vram[2048]{};
     uint8_t palette[32]{};
 
-    // VRAM address registers
+    uint8_t spriteCount = 0;
+
+    // VRAM registers
     uint16_t v = 0;
     uint16_t t = 0;
     uint8_t  x = 0;
     bool     w = false;
 
     uint8_t bufferedData = 0;
+    uint8_t ppuDataBus = 0;
 
-    // NMI logic
+    // Background fetch
+    uint8_t bgNextTileID = 0;
+    uint8_t bgNextTileAttrib = 0;
+    uint8_t bgNextTileLsb = 0;
+    uint8_t bgNextTileMsb = 0;
+
+    // NMI
     bool nmiOccurred = false;
     bool nmiOutput = false;
     bool nmiPrevious = false;

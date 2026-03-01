@@ -21,21 +21,29 @@ void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cart)
 
 uint8_t Bus::cpuRead(uint16_t addr)
 {
-    uint8_t data = 0x00;
+    uint8_t data = cpuDataBus;
 
     if (cartridge && cartridge->cpuRead(addr, data))
+    {
+        cpuDataBus = data;
         return data;
+    }
 
     if (addr <= 0x1FFF)
-        return cpuRam[addr & 0x07FF];
+    {
+        data = cpuRam[addr & 0x07FF];
+        cpuDataBus = data;
+        return data;
+    }
 
     if (addr >= 0x2000 && addr <= 0x3FFF)
-        return ppu->cpuRead(addr & 0x0007);
+    {
+        data = ppu->cpuRead(addr & 0x0007);
+        cpuDataBus = data;
+        return data;
+    }
 
-    if (addr >= 0x4000 && addr <= 0x4017)
-        return 0x00;
-
-    return data;
+    return cpuDataBus; // open bus
 }
 
 void Bus::cpuWrite(uint16_t addr, uint8_t data)
