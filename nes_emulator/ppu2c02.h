@@ -63,6 +63,10 @@ private:
     uint8_t spritePatternLow[8]{};
     uint8_t spritePatternHigh[8]{};
     uint8_t spriteXCounter[8]{};
+    uint8_t spriteAttributes[8]{};
+
+    // Pixel output
+    uint8_t frameBuffer[240][256]{};
 
     // NMI
     bool nmiOccurred = false;
@@ -81,4 +85,6 @@ private:
 
     void loadBackgroundShifters();
     void updateShifters();
+
+    void renderPixel();
 };

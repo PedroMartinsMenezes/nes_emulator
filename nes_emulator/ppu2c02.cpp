@@ -24,9 +24,9 @@ void PPU2C02::reset()
 
 void PPU2C02::clock()
 {
-    // -------------------------
+    bool renderingEnabled = PPUMASK & 0x18;
+
     // VBlank timing
-    // -------------------------
     if (scanline == 261 && cycle == 1)
     {
         nmiOccurred = false;
@@ -43,20 +43,19 @@ void PPU2C02::clock()
 
     updateNMI();
 
-    bool renderingEnabled = PPUMASK & 0x18;
+    if (scanline >= 0 && scanline < 240)
+    {
+        if (renderingEnabled && cycle > 0 && cycle <= 256)
+            renderPixel();
+    }
 
-    // -------------------------
-    // Visible + pre-render logic
-    // -------------------------
     if (scanline >= -1 && scanline < 240)
     {
         if (renderingEnabled)
         {
-            // Background shift registers shift every cycle
             if (cycle >= 2 && cycle < 258)
                 updateShifters();
 
-            // Tile fetch pipeline
             switch ((cycle - 1) % 8)
             {
             case 0: loadBackgroundShifters(); break;
@@ -67,7 +66,11 @@ void PPU2C02::clock()
 
             case 3:
             {
-                uint16_t addr = 0x03C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
+                uint16_t addr = 0x03C0
+                    | (v & 0x0C00)
+                    | ((v >> 4) & 0x38)
+                    | ((v >> 2) & 0x07);
+
                 bgNextTileAttrib = vram[addr];
                 break;
             }
@@ -87,51 +90,17 @@ void PPU2C02::clock()
                 break;
             }
 
-            // Cycle 256: increment Y
             if (cycle == 256)
                 incrementFineY();
 
-            // Cycle 257: horizontal copy
             if (cycle == 257)
                 transferHorizontal();
 
-            // Pre-render vertical copy
             if (scanline == 261 && cycle >= 280 && cycle < 305)
                 transferVertical();
         }
     }
 
-    // -------------------------
-    // Sprite pattern fetch (257–320)
-    // -------------------------
-    if (scanline >= 0 && scanline < 240)
-    {
-        if (cycle == 257)
-        {
-            spriteCount = 0;
-        }
-
-        if (cycle >= 257 && cycle < 321)
-        {
-            int sprite = (cycle - 257) / 8;
-
-            if (sprite < spriteCount)
-            {
-                uint8_t y = secondaryOAM[sprite * 4];
-                uint8_t tile = secondaryOAM[sprite * 4 + 1];
-
-                uint16_t patternAddr = (PPUCTRL & 0x08 ? 0x1000 : 0) + tile * 16 + (scanline - y);
-
-                spritePatternLow[sprite] = vram[patternAddr];
-                spritePatternHigh[sprite] = vram[patternAddr + 8];
-                spriteXCounter[sprite] = secondaryOAM[sprite * 4 + 3];
-            }
-        }
-    }
-
-    // -------------------------
-    // Advance timing
-    // -------------------------
     cycle++;
 
     if (cycle >= 341)
@@ -147,7 +116,6 @@ void PPU2C02::clock()
         }
     }
 
-    // Odd frame skip
     if (scanline == 0 &&
         cycle == 0 &&
         oddFrame &&
@@ -155,6 +123,95 @@ void PPU2C02::clock()
     {
         cycle = 1;
     }
+}
+
+void PPU2C02::renderPixel()
+{
+    uint8_t bgPixel = 0;
+    uint8_t bgPalette = 0;
+
+    if (PPUMASK & 0x08)
+    {
+        uint16_t bitMux = 0x8000 >> x;
+
+        uint8_t p0 = (bgShifterPatternLow & bitMux) > 0;
+        uint8_t p1 = (bgShifterPatternHigh & bitMux) > 0;
+        bgPixel = (p1 << 1) | p0;
+
+        uint8_t pal0 = (bgShifterAttribLow & bitMux) > 0;
+        uint8_t pal1 = (bgShifterAttribHigh & bitMux) > 0;
+        bgPalette = (pal1 << 1) | pal0;
+    }
+
+    uint8_t spritePixel = 0;
+    uint8_t spritePalette = 0;
+    bool spritePriority = false;
+
+    if (PPUMASK & 0x10)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            if (spriteXCounter[i] == 0)
+            {
+                uint8_t p0 = (spritePatternLow[i] & 0x80) > 0;
+                uint8_t p1 = (spritePatternHigh[i] & 0x80) > 0;
+                spritePixel = (p1 << 1) | p0;
+
+                if (spritePixel != 0)
+                {
+                    spritePalette = spriteAttributes[i] & 0x03;
+                    spritePriority = !(spriteAttributes[i] & 0x20);
+
+                    if (i == 0 && bgPixel != 0)
+                        PPUSTATUS |= 0x40;
+
+                    break;
+                }
+            }
+        }
+    }
+
+    uint8_t finalPixel = 0;
+    uint8_t finalPalette = 0;
+
+    if (bgPixel == 0 && spritePixel == 0)
+    {
+        finalPixel = 0;
+        finalPalette = 0;
+    }
+    else if (bgPixel == 0 && spritePixel > 0)
+    {
+        finalPixel = spritePixel;
+        finalPalette = spritePalette + 4;
+    }
+    else if (bgPixel > 0 && spritePixel == 0)
+    {
+        finalPixel = bgPixel;
+        finalPalette = bgPalette;
+    }
+    else
+    {
+        if (spritePriority)
+        {
+            finalPixel = spritePixel;
+            finalPalette = spritePalette + 4;
+        }
+        else
+        {
+            finalPixel = bgPixel;
+            finalPalette = bgPalette;
+        }
+    }
+
+    uint16_t paletteAddr = 0x3F00 + (finalPalette << 2) + finalPixel;
+    paletteAddr &= 0x001F;
+
+    if (paletteAddr == 0x10) paletteAddr = 0x00;
+    if (paletteAddr == 0x14) paletteAddr = 0x04;
+    if (paletteAddr == 0x18) paletteAddr = 0x08;
+    if (paletteAddr == 0x1C) paletteAddr = 0x0C;
+
+    frameBuffer[scanline][cycle - 1] = palette[paletteAddr];
 }
 
 void PPU2C02::updateShifters()
@@ -187,17 +244,6 @@ void PPU2C02::loadBackgroundShifters()
     bgShifterAttribLow = (bgShifterAttribLow & 0xFF00) | ((attrib & 1) ? 0xFF : 0x00);
 
     bgShifterAttribHigh = (bgShifterAttribHigh & 0xFF00) | ((attrib & 2) ? 0xFF : 0x00);
-}
-
-void PPU2C02::incrementCoarseX()
-{
-    if ((v & 0x001F) == 31)
-    {
-        v &= ~0x001F;
-        v ^= 0x0400;
-    }
-    else
-        v++;
 }
 
 void PPU2C02::incrementFineY()
