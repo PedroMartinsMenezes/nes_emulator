@@ -113,4 +113,42 @@ private:
     uint8_t RTS();
     uint8_t BRK();
     uint8_t BNE();
+
+    // Arithmetic / Logic
+    uint8_t ADC();
+    uint8_t SBC();
+    uint8_t AND();
+    uint8_t ORA();
+    uint8_t EOR();
+    uint8_t CMP();
+    uint8_t CPX();
+    uint8_t CPY();
+
+    // Memory modify
+    uint8_t INC();
+    uint8_t INY();
+    uint8_t DEX();
+    uint8_t DEY();
+    uint8_t DEC();
+
+    // Loads / Stores
+    uint8_t LDX();
+    uint8_t LDY();
+    uint8_t STX();
+    uint8_t STY();
+
+    // Stack
+    uint8_t PHA();
+    uint8_t PLA();
+    uint8_t PHP();
+    uint8_t PLP();
+
+    // Flag ops
+    uint8_t CLC();
+    uint8_t SEC();
+    uint8_t CLI();
+    uint8_t SEI();
+    uint8_t CLV();
+    uint8_t CLD();
+    uint8_t SED();
 };

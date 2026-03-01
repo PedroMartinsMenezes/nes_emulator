@@ -295,4 +295,237 @@ void CPU6502::buildOpcodeTable()
 
     lookup[0x00] = { "BRK", &CPU6502::BRK, &CPU6502::IMM, 7 };
     lookup[0xD0] = { "BNE", &CPU6502::BNE, &CPU6502::REL, 2 };
+
+    lookup[0xA2] = { "LDX", &CPU6502::LDX, &CPU6502::IMM, 2 };
+    lookup[0xA0] = { "LDY", &CPU6502::LDY, &CPU6502::IMM, 2 };
+    lookup[0x86] = { "STX", &CPU6502::STX, &CPU6502::ZP0, 3 };
+    lookup[0x84] = { "STY", &CPU6502::STY, &CPU6502::ZP0, 3 };
+
+    lookup[0x69] = { "ADC", &CPU6502::ADC, &CPU6502::IMM, 2 };
+    lookup[0xE9] = { "SBC", &CPU6502::SBC, &CPU6502::IMM, 2 };
+
+    lookup[0x29] = { "AND", &CPU6502::AND, &CPU6502::IMM, 2 };
+    lookup[0x09] = { "ORA", &CPU6502::ORA, &CPU6502::IMM, 2 };
+    lookup[0x49] = { "EOR", &CPU6502::EOR, &CPU6502::IMM, 2 };
+
+    lookup[0xC9] = { "CMP", &CPU6502::CMP, &CPU6502::IMM, 2 };
+    lookup[0xE0] = { "CPX", &CPU6502::CPX, &CPU6502::IMM, 2 };
+    lookup[0xC0] = { "CPY", &CPU6502::CPY, &CPU6502::IMM, 2 };
+
+    lookup[0x18] = { "CLC", &CPU6502::CLC, &CPU6502::IMP, 2 };
+    lookup[0x38] = { "SEC", &CPU6502::SEC, &CPU6502::IMP, 2 };
+    lookup[0x58] = { "CLI", &CPU6502::CLI, &CPU6502::IMP, 2 };
+    lookup[0x78] = { "SEI", &CPU6502::SEI, &CPU6502::IMP, 2 };
+    lookup[0xB8] = { "CLV", &CPU6502::CLV, &CPU6502::IMP, 2 };
+    lookup[0xD8] = { "CLD", &CPU6502::CLD, &CPU6502::IMP, 2 };
+    lookup[0xF8] = { "SED", &CPU6502::SED, &CPU6502::IMP, 2 };
 }
+
+// Arithmetic / Logic
+
+uint8_t CPU6502::ADC()
+{
+    fetch();
+    uint16_t temp = (uint16_t)A + (uint16_t)fetched + GetFlag(C);
+
+    SetFlag(C, temp > 255);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(V, (~((uint16_t)A ^ (uint16_t)fetched) & ((uint16_t)A ^ temp)) & 0x0080);
+    SetFlag(N, temp & 0x80);
+
+    A = temp & 0x00FF;
+    return 1;
+}
+
+uint8_t CPU6502::SBC()
+{
+    fetch();
+    uint16_t value = ((uint16_t)fetched) ^ 0x00FF;
+    uint16_t temp = (uint16_t)A + value + GetFlag(C);
+
+    SetFlag(C, temp & 0xFF00);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(V, (temp ^ (uint16_t)A) & (temp ^ value) & 0x0080);
+    SetFlag(N, temp & 0x80);
+
+    A = temp & 0x00FF;
+    return 1;
+}
+
+uint8_t CPU6502::AND()
+{
+    fetch();
+    A &= fetched;
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    return 1;
+}
+
+uint8_t CPU6502::ORA()
+{
+    fetch();
+    A |= fetched;
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    return 1;
+}
+
+uint8_t CPU6502::EOR()
+{
+    fetch();
+    A ^= fetched;
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    return 1;
+}
+
+// Compare
+
+uint8_t CPU6502::CMP()
+{
+    fetch();
+    uint16_t temp = (uint16_t)A - (uint16_t)fetched;
+    SetFlag(C, A >= fetched);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x0080);
+    return 1;
+}
+
+uint8_t CPU6502::CPX()
+{
+    fetch();
+    uint16_t temp = (uint16_t)X - (uint16_t)fetched;
+    SetFlag(C, X >= fetched);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x0080);
+    return 0;
+}
+
+uint8_t CPU6502::CPY()
+{
+    fetch();
+    uint16_t temp = (uint16_t)Y - (uint16_t)fetched;
+    SetFlag(C, Y >= fetched);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x0080);
+    return 0;
+}
+
+// INC / DEC
+
+uint8_t CPU6502::INC()
+{
+    fetch();
+    uint8_t temp = fetched + 1;
+    write(addr_abs, temp);
+    SetFlag(Z, temp == 0);
+    SetFlag(N, temp & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::DEC()
+{
+    fetch();
+    uint8_t temp = fetched - 1;
+    write(addr_abs, temp);
+    SetFlag(Z, temp == 0);
+    SetFlag(N, temp & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::INY()
+{
+    Y++;
+    SetFlag(Z, Y == 0);
+    SetFlag(N, Y & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::DEX()
+{
+    X--;
+    SetFlag(Z, X == 0);
+    SetFlag(N, X & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::DEY()
+{
+    Y--;
+    SetFlag(Z, Y == 0);
+    SetFlag(N, Y & 0x80);
+    return 0;
+}
+
+// Loads / Stores
+
+uint8_t CPU6502::LDX()
+{
+    fetch();
+    X = fetched;
+    SetFlag(Z, X == 0);
+    SetFlag(N, X & 0x80);
+    return 1;
+}
+
+uint8_t CPU6502::LDY()
+{
+    fetch();
+    Y = fetched;
+    SetFlag(Z, Y == 0);
+    SetFlag(N, Y & 0x80);
+    return 1;
+}
+
+uint8_t CPU6502::STX()
+{
+    write(addr_abs, X);
+    return 0;
+}
+
+uint8_t CPU6502::STY()
+{
+    write(addr_abs, Y);
+    return 0;
+}
+
+// Stack
+
+uint8_t CPU6502::PHA() { push(A); return 0; }
+uint8_t CPU6502::PLA()
+{
+    A = pull();
+    SetFlag(Z, A == 0);
+    SetFlag(N, A & 0x80);
+    return 0;
+}
+
+uint8_t CPU6502::PHP()
+{
+    push(P | B | U);
+    return 0;
+}
+
+uint8_t CPU6502::PLP()
+{
+    P = pull();
+    SetFlag(U, true);
+    return 0;
+}
+
+// Flag Operations
+
+uint8_t CPU6502::CLC() { SetFlag(C, false); return 0; }
+uint8_t CPU6502::SEC() { SetFlag(C, true);  return 0; }
+uint8_t CPU6502::CLI() { SetFlag(I, false); return 0; }
+uint8_t CPU6502::SEI() { SetFlag(I, true);  return 0; }
+uint8_t CPU6502::CLV() { SetFlag(V, false); return 0; }
+uint8_t CPU6502::CLD() { SetFlag(D, false); return 0; }
+uint8_t CPU6502::SED() { SetFlag(D, true);  return 0; }
+
+
+
+
+
+
+
