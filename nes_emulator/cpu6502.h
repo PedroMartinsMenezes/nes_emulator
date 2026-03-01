@@ -151,4 +151,22 @@ private:
     uint8_t CLV();
     uint8_t CLD();
     uint8_t SED();
+
+    // Shifts / Rotates
+    uint8_t ASL();
+    uint8_t LSR();
+    uint8_t ROL();
+    uint8_t ROR();
+
+    // BIT
+    uint8_t BIT();
+
+    // Branches
+    uint8_t BEQ();
+    uint8_t BPL();
+    uint8_t BMI();
+    uint8_t BCC();
+    uint8_t BCS();
+    uint8_t BVC();
+    uint8_t BVS();
 };

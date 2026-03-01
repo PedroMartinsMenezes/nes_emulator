@@ -319,6 +319,47 @@ void CPU6502::buildOpcodeTable()
     lookup[0xB8] = { "CLV", &CPU6502::CLV, &CPU6502::IMP, 2 };
     lookup[0xD8] = { "CLD", &CPU6502::CLD, &CPU6502::IMP, 2 };
     lookup[0xF8] = { "SED", &CPU6502::SED, &CPU6502::IMP, 2 };
+
+    // ASL
+    lookup[0x0A] = { "ASL", &CPU6502::ASL, &CPU6502::IMP, 2 };
+    lookup[0x06] = { "ASL", &CPU6502::ASL, &CPU6502::ZP0, 5 };
+    lookup[0x16] = { "ASL", &CPU6502::ASL, &CPU6502::ZPX, 6 };
+    lookup[0x0E] = { "ASL", &CPU6502::ASL, &CPU6502::ABS, 6 };
+    lookup[0x1E] = { "ASL", &CPU6502::ASL, &CPU6502::ABX, 7 };
+
+    // LSR
+    lookup[0x4A] = { "LSR", &CPU6502::LSR, &CPU6502::IMP, 2 };
+    lookup[0x46] = { "LSR", &CPU6502::LSR, &CPU6502::ZP0, 5 };
+    lookup[0x56] = { "LSR", &CPU6502::LSR, &CPU6502::ZPX, 6 };
+    lookup[0x4E] = { "LSR", &CPU6502::LSR, &CPU6502::ABS, 6 };
+    lookup[0x5E] = { "LSR", &CPU6502::LSR, &CPU6502::ABX, 7 };
+
+    // ROL
+    lookup[0x2A] = { "ROL", &CPU6502::ROL, &CPU6502::IMP, 2 };
+    lookup[0x26] = { "ROL", &CPU6502::ROL, &CPU6502::ZP0, 5 };
+    lookup[0x36] = { "ROL", &CPU6502::ROL, &CPU6502::ZPX, 6 };
+    lookup[0x2E] = { "ROL", &CPU6502::ROL, &CPU6502::ABS, 6 };
+    lookup[0x3E] = { "ROL", &CPU6502::ROL, &CPU6502::ABX, 7 };
+
+    // ROR
+    lookup[0x6A] = { "ROR", &CPU6502::ROR, &CPU6502::IMP, 2 };
+    lookup[0x66] = { "ROR", &CPU6502::ROR, &CPU6502::ZP0, 5 };
+    lookup[0x76] = { "ROR", &CPU6502::ROR, &CPU6502::ZPX, 6 };
+    lookup[0x6E] = { "ROR", &CPU6502::ROR, &CPU6502::ABS, 6 };
+    lookup[0x7E] = { "ROR", &CPU6502::ROR, &CPU6502::ABX, 7 };
+
+    // BIT
+    lookup[0x24] = { "BIT", &CPU6502::BIT, &CPU6502::ZP0, 3 };
+    lookup[0x2C] = { "BIT", &CPU6502::BIT, &CPU6502::ABS, 4 };
+
+    // Branches
+    lookup[0xF0] = { "BEQ", &CPU6502::BEQ, &CPU6502::REL, 2 };
+    lookup[0x10] = { "BPL", &CPU6502::BPL, &CPU6502::REL, 2 };
+    lookup[0x30] = { "BMI", &CPU6502::BMI, &CPU6502::REL, 2 };
+    lookup[0x90] = { "BCC", &CPU6502::BCC, &CPU6502::REL, 2 };
+    lookup[0xB0] = { "BCS", &CPU6502::BCS, &CPU6502::REL, 2 };
+    lookup[0x50] = { "BVC", &CPU6502::BVC, &CPU6502::REL, 2 };
+    lookup[0x70] = { "BVS", &CPU6502::BVS, &CPU6502::REL, 2 };
 }
 
 // Arithmetic / Logic
@@ -524,8 +565,181 @@ uint8_t CPU6502::CLD() { SetFlag(D, false); return 0; }
 uint8_t CPU6502::SED() { SetFlag(D, true);  return 0; }
 
 
+// Aritimetic Shifts and Rotations
 
 
+uint8_t CPU6502::ASL()
+{
+    fetch();
+    uint16_t temp = (uint16_t)fetched << 1;
 
+    SetFlag(C, temp & 0xFF00);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x80);
 
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+        A = temp & 0x00FF;
+    else
+        write(addr_abs, temp & 0x00FF);
+
+    return 0;
+}
+
+uint8_t CPU6502::LSR()
+{
+    fetch();
+    SetFlag(C, fetched & 0x01);
+
+    uint8_t temp = fetched >> 1;
+
+    SetFlag(Z, temp == 0);
+    SetFlag(N, false);
+
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+        A = temp;
+    else
+        write(addr_abs, temp);
+
+    return 0;
+}
+
+uint8_t CPU6502::ROL()
+{
+    fetch();
+    uint16_t temp = ((uint16_t)fetched << 1) | GetFlag(C);
+
+    SetFlag(C, temp & 0xFF00);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x80);
+
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+        A = temp & 0x00FF;
+    else
+        write(addr_abs, temp & 0x00FF);
+
+    return 0;
+}
+
+uint8_t CPU6502::ROR()
+{
+    fetch();
+    uint16_t temp = ((uint16_t)GetFlag(C) << 7) | (fetched >> 1);
+
+    SetFlag(C, fetched & 0x01);
+    SetFlag(Z, (temp & 0x00FF) == 0);
+    SetFlag(N, temp & 0x80);
+
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+        A = temp & 0x00FF;
+    else
+        write(addr_abs, temp & 0x00FF);
+
+    return 0;
+}
+
+// BIT
+
+uint8_t CPU6502::BIT()
+{
+    fetch();
+
+    SetFlag(Z, (A & fetched) == 0);
+    SetFlag(V, fetched & 0x40);
+    SetFlag(N, fetched & 0x80);
+
+    return 0;
+}
+
+// Branch Instructions
+
+uint8_t CPU6502::BEQ()
+{
+    if (GetFlag(Z))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BPL()
+{
+    if (!GetFlag(N))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BMI()
+{
+    if (GetFlag(N))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BCC()
+{
+    if (!GetFlag(C))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BCS()
+{
+    if (GetFlag(C))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BVC()
+{
+    if (!GetFlag(V))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
+
+uint8_t CPU6502::BVS()
+{
+    if (GetFlag(V))
+    {
+        cycles++;
+        uint16_t addr = PC + addr_rel;
+        if ((addr & 0xFF00) != (PC & 0xFF00))
+            cycles++;
+        PC = addr;
+    }
+    return 0;
+}
 
