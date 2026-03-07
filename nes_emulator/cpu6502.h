@@ -1,16 +1,16 @@
 #pragma once
 
-#include <cstdint>
 #include <array>
-#include <string>
+#include <cstdint>
 #include <ostream>
+#include <string>
 
 class Bus;
 class NES;
 
 class CPU6502
 {
-public:
+  public:
     CPU6502();
 
     void connectBus(Bus* b);
@@ -31,19 +31,22 @@ public:
     uint8_t GetFlag(uint8_t f) const;
     void    SetFlag(uint8_t f, bool v);
 
-    void logState(uint16_t pc_before);
+    void        logState(uint16_t pc_before);
+    std::string getOperand(uint8_t (CPU6502::*mode)(void), uint8_t& b1, uint8_t& b2, uint16_t pc_before);
 
-public:
-    uint8_t A = 0;
-    uint8_t X = 0;
-    uint8_t Y = 0;
-    uint8_t SP = 0xFD;
-    uint8_t P = 0x24;
-    uint16_t PC = 0;
-    uint64_t totalCycles = 0;
-    std::ofstream* log = nullptr;
+    bool isMemoryOpcode(uint8_t op) const;
 
-private:
+  public:
+    uint8_t        A           = 0;
+    uint8_t        X           = 0;
+    uint8_t        Y           = 0;
+    uint8_t        SP          = 0xFD;
+    uint8_t        P           = 0x24;
+    uint16_t       PC          = 0;
+    uint64_t       totalCycles = 0;
+    std::ofstream* log         = nullptr;
+
+  private:
     enum FLAGS6502
     {
         C = 1 << 0,
@@ -59,19 +62,19 @@ private:
     struct INSTRUCTION
     {
         const char* name;
-        uint8_t(CPU6502::* operate)(void);
-        uint8_t(CPU6502::* addrmode)(void);
+        uint8_t (CPU6502::*operate)(void);
+        uint8_t (CPU6502::*addrmode)(void);
         uint8_t cycles;
     };
 
-private:
+  private:
     Bus* bus = nullptr;
     NES* nes = nullptr;
 
     std::array<INSTRUCTION, 256> lookup;
 
-    uint8_t opcode = 0;
-    uint8_t fetched = 0;
+    uint8_t  opcode   = 0;
+    uint8_t  fetched  = 0;
     uint16_t addr_abs = 0;
     uint16_t addr_rel = 0;
 
@@ -80,7 +83,7 @@ private:
     bool nmi_pending = false;
     bool irq_pending = false;
 
-private:
+  private:
     uint8_t read(uint16_t addr);
     void    write(uint16_t addr, uint8_t data);
 
@@ -89,9 +92,9 @@ private:
     void    push(uint8_t v);
     uint8_t pull();
 
-    void    handleInterrupt(uint16_t vector);
+    void handleInterrupt(uint16_t vector);
 
-    void    buildOpcodeTable();
+    void buildOpcodeTable();
 
     std::string disassemble(uint16_t addr);
 

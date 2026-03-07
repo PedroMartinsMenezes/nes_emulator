@@ -1076,6 +1076,50 @@ void CPU6502::logState(uint16_t pc_before)
     // -------------------
     line << lookup[op].name << " ";
 
+    std::string operand = getOperand(mode, b1, b2, pc_before);
+    
+    line << operand;
+
+    // -------------------
+    // Padding to column 48
+    // -------------------
+    while (line.str().length() < 48)
+        line << " ";
+
+    // -------------------
+    // Registers
+    // -------------------
+    line << "A:" << std::setw(2) << (int)A << " ";
+    line << "X:" << std::setw(2) << (int)X << " ";
+    line << "Y:" << std::setw(2) << (int)Y << " ";
+    line << "P:" << std::setw(2) << (int)P << " ";
+    line << "SP:" << std::setw(2) << (int)SP << " ";
+
+    // -------------------
+    // PPU
+    // -------------------
+    line << std::dec << std::setfill(' ');
+    int16_t scanline = (bus->ppu->scanline == 261) ? 0 : bus->ppu->scanline;
+    line << "PPU:" << std::setw(3) << scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
+
+    // -------------------
+    // CPU cycles
+    // -------------------
+    line << "CYC:" << totalCycles;
+
+    (*log) << line.str() << "\n";
+
+    if (totalCycles > 500)
+    {
+        log->close();
+        log = nullptr;
+
+        exit(0);
+    }
+}
+
+std::string CPU6502::getOperand(uint8_t (CPU6502::*mode)(void), uint8_t& b1, uint8_t& b2, uint16_t pc_before)
+{
     std::stringstream operand;
     operand << std::uppercase << std::hex << std::setfill('0');
 
@@ -1124,41 +1168,25 @@ void CPU6502::logState(uint16_t pc_before)
     {
         operand << "($" << std::setw(2) << (int)b1 << "),Y";
     }
+    return operand.str();
+}
 
-    line << operand.str();
+bool CPU6502::isMemoryOpcode(uint8_t op) const
+{
+    if (lookup[op].addrmode == &CPU6502::IMM)
+        return false;
 
-    // -------------------
-    // Padding to column 48
-    // -------------------
-    while (line.str().length() < 48)
-        line << " ";
+    auto fn = lookup[op].operate;
 
-    // -------------------
-    // Registers
-    // -------------------
-    line << "A:" << std::setw(2) << (int)A << " ";
-    line << "X:" << std::setw(2) << (int)X << " ";
-    line << "Y:" << std::setw(2) << (int)Y << " ";
-    line << "P:" << std::setw(2) << (int)P << " ";
-    line << "SP:" << std::setw(2) << (int)SP << " ";
+    return fn == &CPU6502::BIT || fn == &CPU6502::STA || fn == &CPU6502::STX || fn == &CPU6502::STY ||
+           fn == &CPU6502::LDA || fn == &CPU6502::LDX || fn == &CPU6502::LDY || fn == &CPU6502::ORA ||
+           fn == &CPU6502::AND || fn == &CPU6502::EOR || fn == &CPU6502::ADC || fn == &CPU6502::SBC ||
+           fn == &CPU6502::CMP || fn == &CPU6502::CPX || fn == &CPU6502::CPY ||
 
-    // -------------------
-    // PPU
-    // -------------------
-    line << std::dec << std::setfill(' ');
-    int16_t scanline = (bus->ppu->scanline == 261) ? 0 : bus->ppu->scanline;
-    line << "PPU:" << std::setw(3) << scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
+           // Read-modify-write
+           fn == &CPU6502::INC || fn == &CPU6502::DEC || fn == &CPU6502::ASL || fn == &CPU6502::LSR ||
+           fn == &CPU6502::ROL || fn == &CPU6502::ROR ||
 
-    // -------------------
-    // CPU cycles
-    // -------------------
-    line << "CYC:" << totalCycles;
-
-    (*log) << line.str() << "\n";
-
-    if (totalCycles > 100)
-    {
-        log->close();
-        log = nullptr;
-    }
+           // Illegal NOPs (DOP / TOP)
+           lookup[op].name[0] == '*';
 }
