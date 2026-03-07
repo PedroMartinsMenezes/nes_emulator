@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <string>
+#include <ostream>
 
 class Bus;
 class NES;
@@ -14,6 +15,7 @@ public:
 
     void connectBus(Bus* b);
     void setNES(NES* n);
+    void setLogger(std::ofstream* log);
 
     void powerOn();
     void reset();
@@ -29,6 +31,8 @@ public:
     uint8_t GetFlag(uint8_t f) const;
     void    SetFlag(uint8_t f, bool v);
 
+    void logState(std::ofstream* os, uint16_t pc_before);
+
 public:
     uint8_t A = 0;
     uint8_t X = 0;
@@ -37,6 +41,7 @@ public:
     uint8_t P = 0x24;
     uint16_t PC = 0;
     uint64_t totalCycles = 0;
+    std::ofstream* log = nullptr;
 
 private:
     enum FLAGS6502
@@ -89,7 +94,6 @@ private:
     void    buildOpcodeTable();
 
     std::string disassemble(uint16_t addr);
-    void logState(std::ostream& os, uint16_t pc_before);
 
     // Addressing modes
     uint8_t IMP();

@@ -8,9 +8,9 @@ NES::NES()
     bus.connectAPU(&apu);
 
     cpu.connectBus(&bus);
-
-    // CPU needs access to NES for timing
     cpu.setNES(this);
+    ppu.connectNES(this);
+    apu.connectCPU(&cpu);
 }
 
 NES::~NES()
@@ -35,7 +35,7 @@ void NES::run()
 {
     running = true;
 
-    while (running)
+    //while (running)
     {
         cpu.ExecOp(); //  All timing happens inside MemRead/MemWrite
     }

@@ -32,11 +32,11 @@ public:
     uint8_t dmaAddr = 0x00;
     uint8_t dmaData = 0x00;
 
-private:
     CPU6502* cpu = nullptr;
     PPU2C02* ppu = nullptr;
     APU2A03* apu = nullptr;
     std::shared_ptr<Cartridge> cartridge;
 
+private:
     uint8_t cpuRam[2048];
 };
