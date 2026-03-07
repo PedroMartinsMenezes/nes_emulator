@@ -31,7 +31,7 @@ public:
     uint8_t GetFlag(uint8_t f) const;
     void    SetFlag(uint8_t f, bool v);
 
-    void logState(std::ofstream* os, uint16_t pc_before);
+    void logState(uint16_t pc_before);
 
 public:
     uint8_t A = 0;

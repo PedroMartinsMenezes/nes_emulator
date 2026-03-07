@@ -69,23 +69,13 @@ void CPU6502::reset()
     uint16_t hi = read(0xFFFD);
     PC          = (hi << 8) | lo;
 
-    cycles = 8;
+    cycles = 7;
 }
 
 void CPU6502::ExecOp()
 {
     do
     {
-        //< AFTER the previous instruction finished then add log
-        if (log != nullptr && instructionComplete())
-        {
-            logState(log, PC);
-
-            if (PC == 0xC66E)
-                break;
-        }
-        //>
-
         clock();
 
     } while (!instructionComplete());
@@ -116,6 +106,9 @@ void CPU6502::clock()
             handleInterrupt(0xFFFE);
             return;
         }
+
+        // LOG HERE: AFTER interrupt polling and BEFORE opcode fetch
+        logState(PC);
 
         opcode = read(PC++);
         cycles = lookup[opcode].cycles;
@@ -1030,9 +1023,9 @@ std::string CPU6502::disassemble(uint16_t addr)
 //    }
 //}
 
-void CPU6502::logState(std::ofstream* os, uint16_t pc_before)
+void CPU6502::logState(uint16_t pc_before)
 {
-    if (os == nullptr)
+    if (log == nullptr)
         return;
 
     uint8_t op = bus->cpuRead(pc_before);
@@ -1152,13 +1145,20 @@ void CPU6502::logState(std::ofstream* os, uint16_t pc_before)
     // -------------------
     // PPU
     // -------------------
-    line << std::dec;
-    line << "PPU:" << std::setw(3) << bus->ppu->scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
+    line << std::dec << std::setfill(' ');
+    int16_t scanline = (bus->ppu->scanline == 261) ? 0 : bus->ppu->scanline;
+    line << "PPU:" << std::setw(3) << scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
 
     // -------------------
     // CPU cycles
     // -------------------
     line << "CYC:" << totalCycles;
 
-    (*os) << line.str() << "\n";
+    (*log) << line.str() << "\n";
+
+    if (totalCycles > 100)
+    {
+        log->close();
+        log = nullptr;
+    }
 }
