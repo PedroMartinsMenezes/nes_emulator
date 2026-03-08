@@ -1289,6 +1289,7 @@ void CPU6502::logState(uint16_t pc_before)
 
 std::string CPU6502::getOperand(uint8_t (CPU6502::*mode)(void), uint8_t op, uint8_t b1, uint8_t b2, uint16_t pc)
 {
+    char              buf[32]{};
     std::stringstream operand;
     operand << std::uppercase << std::hex << std::setfill('0');
 
@@ -1302,11 +1303,19 @@ std::string CPU6502::getOperand(uint8_t (CPU6502::*mode)(void), uint8_t op, uint
     }
     else if (mode == &CPU6502::ZPX)
     {
-        operand << "$" << std::setw(2) << (int)b1 << ",X";
+        uint8_t base = b1;
+        uint8_t ea   = (base + X) & 0xFF;
+        uint8_t val  = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "$%02X,X @ %02X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ZPY)
     {
-        operand << "$" << std::setw(2) << (int)b1 << ",Y";
+        uint8_t base = b1;
+        uint8_t ea   = (base + Y) & 0xFF;
+        uint8_t val  = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "$%02X,Y @ %02X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ABS)
     {
@@ -1314,11 +1323,19 @@ std::string CPU6502::getOperand(uint8_t (CPU6502::*mode)(void), uint8_t op, uint
     }
     else if (mode == &CPU6502::ABX)
     {
-        operand << "$" << std::setw(4) << ((b2 << 8) | b1) << ",X";
+        uint16_t base = (b2 << 8) | b1;
+        uint16_t ea   = (base + X) & 0xFFFF;
+        uint8_t  val  = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "$%04X,X @ %04X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::ABY)
     {
-        operand << "$" << std::setw(4) << ((b2 << 8) | b1) << ",Y";
+        uint16_t base = (b2 << 8) | b1;
+        uint16_t ea   = (base + Y) & 0xFFFF;
+        uint8_t  val  = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "$%04X,Y @ %04X = %02X", base, ea, val);
+        return std::string(buf);
     }
     else if (mode == &CPU6502::REL)
     {
@@ -1327,15 +1344,47 @@ std::string CPU6502::getOperand(uint8_t (CPU6502::*mode)(void), uint8_t op, uint
     }
     else if (mode == &CPU6502::IND)
     {
-        operand << "($" << std::setw(4) << ((b2 << 8) | b1) << ")";
+        uint16_t ptr = (b2 << 8) | b1;
+        uint8_t  lo  = bus->cpuRead(ptr);
+        uint8_t  hi;
+        // Emulate 6502 indirect JMP page-wrap bug
+        if ((ptr & 0x00FF) == 0x00FF)
+            hi = bus->cpuRead(ptr & 0xFF00);
+        else
+            hi = bus->cpuRead(ptr + 1);
+        uint16_t target = (hi << 8) | lo;
+        snprintf(buf, sizeof(buf), "($%04X) = %04X", ptr, target);
+        operand << buf;
     }
     else if (mode == &CPU6502::IZX)
     {
-        operand << "($" << std::setw(2) << (int)b1 << ",X)";
+        uint8_t  zp_addr = b1;
+        uint8_t  zp_ptr  = (zp_addr + X) & 0xFF;
+        uint8_t  lo      = bus->cpuRead(zp_ptr);
+        uint8_t  hi      = bus->cpuRead((zp_ptr + 1) & 0xFF);
+        uint16_t ea      = (hi << 8) | lo;
+        uint8_t  val     = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "($%02X,X) @ %02X = %04X = %02X", zp_addr, zp_ptr, ea, val);
+        operand << buf;
     }
     else if (mode == &CPU6502::IZY)
     {
-        operand << "($" << std::setw(2) << (int)b1 << "),Y";
+        uint8_t  zp_addr = b1;
+        uint8_t  lo      = bus->cpuRead(zp_addr);
+        uint8_t  hi      = bus->cpuRead((zp_addr + 1) & 0xFF);
+        uint16_t base    = (hi << 8) | lo;
+        uint16_t ea      = base + Y;
+        uint8_t  val     = bus->cpuRead(ea);
+        snprintf(buf, sizeof(buf), "($%02X),Y = %04X @ %04X = %02X", zp_addr, base, ea, val);
+        operand << buf;
+    }
+
+    // Accumulator addressing (nestest formatting)
+    if (lookup[op].addrmode == &CPU6502::IMP)
+    {
+        auto fn = lookup[op].operate;
+        if (fn == &CPU6502::LSR || fn == &CPU6502::ASL || fn == &CPU6502::ROL || fn == &CPU6502::ROR)
+            return "A";
     }
 
     if (isMemoryOpcode(op) && mode != &CPU6502::IMP && mode != &CPU6502::IMM && mode != &CPU6502::IZX &&
@@ -1413,4 +1462,3 @@ uint16_t CPU6502::computeEffectiveAddressForLog(uint8_t op, uint8_t b1, uint8_t 
 
     return 0;
 }
-
