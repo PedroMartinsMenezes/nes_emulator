@@ -635,6 +635,116 @@ void CPU6502::buildOpcodeTable()
     lookup[0x8A] = {"TXA", &CPU6502::TXA, &CPU6502::IMP, 2};
     lookup[0x9A] = {"TXS", &CPU6502::TXS, &CPU6502::IMP, 2};
     lookup[0x98] = {"TYA", &CPU6502::TYA, &CPU6502::IMP, 2};
+
+    #pragma region Illegal NOP entries
+
+    //Illegal immediate NOP
+    lookup[0x80] = {"*NOP", &CPU6502::NOP, &CPU6502::IMM, 2};
+
+    //Illegal implied NOPs
+    lookup[0x1A] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+    lookup[0x3A] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+    lookup[0x5A] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+    lookup[0x7A] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+    lookup[0xDA] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+    lookup[0xFA] = {"*NOP", &CPU6502::NOP, &CPU6502::IMP, 2};
+
+    //Zero-page illegal NOPs (DOP)
+    lookup[0x04] = {"*NOP", &CPU6502::NOP, &CPU6502::ZP0, 3};
+    lookup[0x44] = {"*NOP", &CPU6502::NOP, &CPU6502::ZP0, 3};
+    lookup[0x64] = {"*NOP", &CPU6502::NOP, &CPU6502::ZP0, 3};
+
+    //ZPX illegal NOPs
+    lookup[0x14] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+    lookup[0x34] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+    lookup[0x54] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+    lookup[0x74] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+    lookup[0xD4] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+    lookup[0xF4] = {"*NOP", &CPU6502::NOP, &CPU6502::ZPX, 4};
+
+    //Absolute illegal NOP
+    lookup[0x0C] = {"*NOP", &CPU6502::NOP, &CPU6502::ABS, 4};
+
+    //ABX illegal NOPs
+    lookup[0x1C] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+    lookup[0x3C] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+    lookup[0x5C] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+    lookup[0x7C] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+    lookup[0xDC] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+    lookup[0xFC] = {"*NOP", &CPU6502::NOP1, &CPU6502::ABX, 4};
+
+    // Illegal LAX
+    lookup[0xA3] = {"*LAX", &CPU6502::LAX, &CPU6502::IZX, 6};
+    lookup[0xA7] = {"*LAX", &CPU6502::LAX, &CPU6502::ZP0, 3};
+    lookup[0xAF] = {"*LAX", &CPU6502::LAX, &CPU6502::ABS, 4};
+    lookup[0xB3] = {"*LAX", &CPU6502::LAX, &CPU6502::IZY, 5};
+    lookup[0xB7] = {"*LAX", &CPU6502::LAX, &CPU6502::ZPY, 4};
+    lookup[0xBF] = {"*LAX", &CPU6502::LAX, &CPU6502::ABY, 4};
+
+    // Illegal SAX
+    lookup[0x83] = {"*SAX", &CPU6502::SAX, &CPU6502::IZX, 6};
+    lookup[0x87] = {"*SAX", &CPU6502::SAX, &CPU6502::ZP0, 3};
+    lookup[0x8F] = {"*SAX", &CPU6502::SAX, &CPU6502::ABS, 4};
+    lookup[0x97] = {"*SAX", &CPU6502::SAX, &CPU6502::ZPY, 4};
+
+    // Illegal DCP
+    lookup[0xC3] = {"*DCP", &CPU6502::DCP, &CPU6502::IZX, 8};
+    lookup[0xC7] = {"*DCP", &CPU6502::DCP, &CPU6502::ZP0, 5};
+    lookup[0xCF] = {"*DCP", &CPU6502::DCP, &CPU6502::ABS, 6};
+    lookup[0xD3] = {"*DCP", &CPU6502::DCP, &CPU6502::IZY, 8};
+    lookup[0xD7] = {"*DCP", &CPU6502::DCP, &CPU6502::ZPX, 6};
+    lookup[0xDB] = {"*DCP", &CPU6502::DCP, &CPU6502::ABY, 7};
+    lookup[0xDF] = {"*DCP", &CPU6502::DCP, &CPU6502::ABX, 7};
+
+    // Illegal ISB
+    lookup[0xE3] = {"*ISB", &CPU6502::ISC, &CPU6502::IZX, 8};
+    lookup[0xE7] = {"*ISB", &CPU6502::ISC, &CPU6502::ZP0, 5};
+    lookup[0xEF] = {"*ISB", &CPU6502::ISC, &CPU6502::ABS, 6};
+    lookup[0xF3] = {"*ISB", &CPU6502::ISC, &CPU6502::IZY, 8};
+    lookup[0xF7] = {"*ISB", &CPU6502::ISC, &CPU6502::ZPX, 6};
+    lookup[0xFB] = {"*ISB", &CPU6502::ISC, &CPU6502::ABY, 7};
+    lookup[0xFF] = {"*ISB", &CPU6502::ISC, &CPU6502::ABX, 7};
+
+    // Illegal SLO
+    lookup[0x03] = {"*SLO", &CPU6502::SLO, &CPU6502::IZX, 8};
+    lookup[0x07] = {"*SLO", &CPU6502::SLO, &CPU6502::ZP0, 5};
+    lookup[0x0F] = {"*SLO", &CPU6502::SLO, &CPU6502::ABS, 6};
+    lookup[0x13] = {"*SLO", &CPU6502::SLO, &CPU6502::IZY, 8};
+    lookup[0x17] = {"*SLO", &CPU6502::SLO, &CPU6502::ZPX, 6};
+    lookup[0x1B] = {"*SLO", &CPU6502::SLO, &CPU6502::ABY, 7};
+    lookup[0x1F] = {"*SLO", &CPU6502::SLO, &CPU6502::ABX, 7};
+
+    // Illegal RLA
+    lookup[0x23] = {"*RLA", &CPU6502::RLA, &CPU6502::IZX, 8};
+    lookup[0x27] = {"*RLA", &CPU6502::RLA, &CPU6502::ZP0, 5};
+    lookup[0x2F] = {"*RLA", &CPU6502::RLA, &CPU6502::ABS, 6};
+    lookup[0x33] = {"*RLA", &CPU6502::RLA, &CPU6502::IZY, 8};
+    lookup[0x37] = {"*RLA", &CPU6502::RLA, &CPU6502::ZPX, 6};
+    lookup[0x3B] = {"*RLA", &CPU6502::RLA, &CPU6502::ABY, 7};
+    lookup[0x3F] = {"*RLA", &CPU6502::RLA, &CPU6502::ABX, 7};
+
+    // Illegal SRE
+    lookup[0x43] = {"*SRE", &CPU6502::SRE, &CPU6502::IZX, 8};
+    lookup[0x47] = {"*SRE", &CPU6502::SRE, &CPU6502::ZP0, 5};
+    lookup[0x4F] = {"*SRE", &CPU6502::SRE, &CPU6502::ABS, 6};
+    lookup[0x53] = {"*SRE", &CPU6502::SRE, &CPU6502::IZY, 8};
+    lookup[0x57] = {"*SRE", &CPU6502::SRE, &CPU6502::ZPX, 6};
+    lookup[0x5B] = {"*SRE", &CPU6502::SRE, &CPU6502::ABY, 7};
+    lookup[0x5F] = {"*SRE", &CPU6502::SRE, &CPU6502::ABX, 7};
+
+    // Illegal RRA
+    lookup[0x63] = {"*RRA", &CPU6502::RRA, &CPU6502::IZX, 8};
+    lookup[0x67] = {"*RRA", &CPU6502::RRA, &CPU6502::ZP0, 5};
+    lookup[0x6F] = {"*RRA", &CPU6502::RRA, &CPU6502::ABS, 6};
+    lookup[0x73] = {"*RRA", &CPU6502::RRA, &CPU6502::IZY, 8};
+    lookup[0x77] = {"*RRA", &CPU6502::RRA, &CPU6502::ZPX, 6};
+    lookup[0x7B] = {"*RRA", &CPU6502::RRA, &CPU6502::ABY, 7};
+    lookup[0x7F] = {"*RRA", &CPU6502::RRA, &CPU6502::ABX, 7};
+
+    // Illegal SBC immediate:
+    lookup[0xEB] = {"*SBC", &CPU6502::SBC, &CPU6502::IMM, 2};
+
+    #pragma endregion
 }
 
 // Arithmetic / Logic
@@ -1157,6 +1267,11 @@ uint8_t CPU6502::KIL()
     return 0;
 }
 
+uint8_t CPU6502::NOP1()
+{
+    return 1; // pretend it is a read instruction for timing
+}
+
 #pragma endregion
 
 std::string CPU6502::disassemble(uint16_t addr)
@@ -1237,7 +1352,10 @@ void CPU6502::logState(uint16_t pc_before)
     else
         line << "  ";
 
-    line << "  ";
+    if (lookup[op].name[0] == '*')
+        line << " ";
+    else
+        line << "  ";
 
     // -------------------
     // Mnemonic
@@ -1278,7 +1396,7 @@ void CPU6502::logState(uint16_t pc_before)
 
     (*log) << line.str() << "\n";
 
-    if (totalCycles > 10000)
+    if (totalCycles >= 26554)
     {
         log->close();
         log = nullptr;

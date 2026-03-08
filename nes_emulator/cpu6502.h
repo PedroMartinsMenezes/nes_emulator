@@ -200,6 +200,7 @@ class CPU6502
     uint8_t ALR();
     uint8_t ARR();
     uint8_t KIL();
+    uint8_t NOP1();
 
     //Return from Interrupt
     uint8_t RTI();
