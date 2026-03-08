@@ -1,8 +1,8 @@
 #include "bus.h"
-#include "cpu6502.h"
-#include "ppu2c02.h"
 #include "apu2a03.h"
 #include "cartridge.h"
+#include "cpu6502.h"
+#include "ppu2c02.h"
 
 Bus::Bus()
 {
@@ -10,9 +10,18 @@ Bus::Bus()
         b = 0x00;
 }
 
-void Bus::connectCPU(CPU6502* c) { cpu = c; }
-void Bus::connectPPU(PPU2C02* p) { ppu = p; }
-void Bus::connectAPU(APU2A03* a) { apu = a; }
+void Bus::connectCPU(CPU6502* c)
+{
+    cpu = c;
+}
+void Bus::connectPPU(PPU2C02* p)
+{
+    ppu = p;
+}
+void Bus::connectAPU(APU2A03* a)
+{
+    apu = a;
+}
 
 void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cart)
 {
@@ -29,19 +38,29 @@ uint8_t Bus::cpuRead(uint16_t addr)
         return data;
     }
 
+    // Internal RAM ($0000 – $1FFF)
     if (addr <= 0x1FFF)
     {
-        data = cpuRam[addr & 0x07FF];
+        data       = cpuRam[addr & 0x07FF];
         cpuDataBus = data;
         return data;
     }
 
+    // PPU registers ($2000 – $3FFF)
     if (addr >= 0x2000 && addr <= 0x3FFF)
     {
-        data = ppu->cpuRead(addr & 0x0007);
+        data       = ppu->cpuRead(addr & 0x0007);
         cpuDataBus = data;
         return data;
     }
+
+    // APU + IO registers ($4000 – $4017)
+    if (addr >= 0x4000 && addr <= 0x4017)
+        return 0xFF; // OPEN BUS (correct for now)
+
+    // Disabled ($4018 – $401F)
+    if (addr >= 0x4018 && addr <= 0x401F)
+        return 0x00;
 
     return cpuDataBus;
 }
@@ -51,25 +70,38 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data)
     if (cartridge && cartridge->cpuWrite(addr, data))
         return;
 
+    // Internal RAM ($0000 – $1FFF)
     if (addr <= 0x1FFF)
     {
         cpuRam[addr & 0x07FF] = data;
         return;
     }
 
+    // PPU registers ($2000 – $3FFF)
     if (addr >= 0x2000 && addr <= 0x3FFF)
     {
         ppu->cpuWrite(addr & 0x0007, data);
         return;
     }
 
-    if (addr == 0x4014)
+    // APU + IO ($4000 – $4017)
+    if (addr >= 0x4000 && addr <= 0x4017)
     {
-        dmaPage = data;
-        dmaAddr = 0;
-        dmaActive = true;
-        dmaDummy = true;
+        // $4014 = OAM DMA
+        if (addr == 0x4014)
+        {
+            dmaPage   = data;
+            dmaAddr   = 0;
+            dmaActive = true;
+            dmaDummy  = true;
+        }
+        // TODO: APU + controllers later
+        return;
     }
+
+    // Disabled ($4018–$401F)
+    if (addr >= 0x4018 && addr <= 0x401F)
+        return;
 }
 
 void Bus::clockDMA()
@@ -89,7 +121,7 @@ void Bus::clockDMA()
     if (cpu->totalCycles % 2 == 0)
     {
         uint16_t addr = (dmaPage << 8) | dmaAddr;
-        dmaData = cpuRead(addr);
+        dmaData       = cpuRead(addr);
     }
     else
     {
@@ -99,7 +131,7 @@ void Bus::clockDMA()
         if (dmaAddr == 0)
         {
             dmaActive = false;
-            dmaDummy = true;
+            dmaDummy  = true;
         }
     }
 }
