@@ -32,7 +32,9 @@ class CPU6502
     void    SetFlag(uint8_t f, bool v);
 
     void        logState(uint16_t pc_before);
-    std::string getOperand(uint8_t (CPU6502::*mode)(void), uint8_t& b1, uint8_t& b2, uint16_t pc_before);
+    std::string getOperand(uint8_t (CPU6502::*mode)(void), uint8_t op, uint8_t b1, uint8_t b2, uint16_t pc);
+    uint8_t     getEffectiveValueForLog(uint16_t effectiveAddress);
+    uint16_t    computeEffectiveAddressForLog(uint8_t op, uint8_t b1, uint8_t b2, uint16_t pc);
 
     bool isMemoryOpcode(uint8_t op) const;
 
@@ -117,6 +119,11 @@ class CPU6502
     uint8_t LDA();
     uint8_t STA();
     uint8_t TAX();
+    uint8_t TAY();
+    uint8_t TSX();
+    uint8_t TXS();
+    uint8_t TXA();
+    uint8_t TYA();
     uint8_t INX();
     uint8_t JMP();
     uint8_t JSR();
@@ -193,4 +200,7 @@ class CPU6502
     uint8_t ALR();
     uint8_t ARR();
     uint8_t KIL();
+
+    //Return from Interrupt
+    uint8_t RTI();
 };

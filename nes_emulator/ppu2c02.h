@@ -2,6 +2,7 @@
 #include <cstdint>
 
 class NES;
+class Bus;
 
 class PPU2C02
 {
@@ -24,6 +25,7 @@ public:
 
 private:
     NES* nes = nullptr;
+    Bus* bus = nullptr;
 
     uint8_t PPUCTRL = 0;
     uint8_t PPUMASK = 0;

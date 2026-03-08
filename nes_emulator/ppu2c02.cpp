@@ -6,11 +6,12 @@ PPU2C02::PPU2C02() {}
 void PPU2C02::connectNES(NES* n)
 {
     nes = n;
+    bus = &nes->bus;
 }
 
 void PPU2C02::reset()
 {
-    scanline = 261;
+    scanline = 0;
     cycle    = 0;
     frame    = 0;
     oddFrame = false;
