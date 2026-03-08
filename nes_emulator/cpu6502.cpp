@@ -53,15 +53,11 @@ void CPU6502::powerOn()
 
 void CPU6502::reset()
 {
-    /*SP -= 3;
-    SetFlag(I, true);
-    PC = read(0xFFFC) | (read(0xFFFD) << 8);
-    cycles = 7;*/
     A = 0;
     X = 0;
     Y = 0;
 
-    SP = 0xFD; // MUST be 0xFD
+    SP = 0xFD;
 
     P = 0x24; // IRQ disabled + unused bit set
 
@@ -419,8 +415,7 @@ uint8_t CPU6502::RTI()
     return 0;
 }
 
-// Opcode Table (Partial for Now)
-
+// Opcode Table
 void CPU6502::buildOpcodeTable()
 {
     for (auto& i : lookup)
@@ -636,7 +631,7 @@ void CPU6502::buildOpcodeTable()
     lookup[0x9A] = {"TXS", &CPU6502::TXS, &CPU6502::IMP, 2};
     lookup[0x98] = {"TYA", &CPU6502::TYA, &CPU6502::IMP, 2};
 
-    #pragma region Illegal NOP entries
+#pragma region Illegal NOP entries
 
     //Illegal immediate NOP
     lookup[0x80] = {"*NOP", &CPU6502::NOP, &CPU6502::IMM, 2};
@@ -744,7 +739,7 @@ void CPU6502::buildOpcodeTable()
     // Illegal SBC immediate:
     lookup[0xEB] = {"*SBC", &CPU6502::SBC, &CPU6502::IMM, 2};
 
-    #pragma endregion
+#pragma endregion
 }
 
 // Arithmetic / Logic
@@ -1284,28 +1279,6 @@ std::string CPU6502::disassemble(uint16_t addr)
     return std::string(buffer);
 }
 
-//void CPU6502::logState(std::ostream& os, uint16_t pc_before)
-//{
-//    std::stringstream msg_builder;
-//
-//    msg_builder << disassemble(pc_before)
-//        << "  A:" << std::hex << (int)A
-//        << " X:" << (int)X
-//        << " Y:" << (int)Y
-//        << " P:" << (int)P
-//        << " SP:" << (int)SP
-//        << " CYC:" << totalCycles;
-//
-//
-//    os << msg_builder.str() << "\n";
-//
-//    static int count = 0;
-//    if (count++ < 100)
-//    {
-//        std::cout << msg_builder.str() << "\n";
-//    }
-//}
-
 void CPU6502::logState(uint16_t pc_before)
 {
     if (log == nullptr)
@@ -1318,14 +1291,10 @@ void CPU6502::logState(uint16_t pc_before)
     std::stringstream line;
     line << std::uppercase << std::hex << std::setfill('0');
 
-    // -------------------
     // PC
-    // -------------------
     line << std::setw(4) << pc_before << "  ";
 
-    // -------------------
-    // Raw bytes
-    // -------------------
+    // Opcode
     line << std::setw(2) << (int)op << " ";
 
     auto mode = lookup[op].addrmode;
@@ -1342,65 +1311,58 @@ void CPU6502::logState(uint16_t pc_before)
         instrSize = 3;
     }
 
+    // Byte 1
     if (instrSize >= 2)
         line << std::setw(2) << (int)b1 << " ";
     else
         line << "   ";
 
+    // Byte 2
     if (instrSize == 3)
         line << std::setw(2) << (int)b2;
     else
         line << "  ";
 
+    // Space
     if (lookup[op].name[0] == '*')
         line << " ";
     else
         line << "  ";
 
-    // -------------------
     // Mnemonic
-    // -------------------
     line << lookup[op].name << " ";
 
     std::string operand = getOperand(mode, op, b1, b2, pc_before);
 
+    // Operand
     line << operand;
 
-    // -------------------
     // Padding to column 48
-    // -------------------
     while (line.str().length() < 48)
         line << " ";
 
-    // -------------------
     // Registers
-    // -------------------
-
     line << "A:" << std::setw(2) << (int)A << " ";
     line << "X:" << std::setw(2) << (int)X << " ";
     line << "Y:" << std::setw(2) << (int)Y << " ";
     line << "P:" << std::setw(2) << (int)P << " ";
     line << "SP:" << std::setw(2) << (int)SP << " ";
 
-    // -------------------
     // PPU
-    // -------------------
-    line << std::dec << std::setfill(' ');
     int16_t scanline = (bus->ppu->scanline == 261) ? 0 : bus->ppu->scanline;
+    line << std::dec << std::setfill(' ');
     line << "PPU:" << std::setw(3) << scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
 
-    // -------------------
     // CPU cycles
-    // -------------------
     line << "CYC:" << totalCycles;
 
     (*log) << line.str() << "\n";
 
-    if (totalCycles >= 26554)
+    //@@@ Remove this
+    if (totalCycles >= (26554 + 100))
     {
         log->close();
         log = nullptr;
-
         exit(0);
     }
 }

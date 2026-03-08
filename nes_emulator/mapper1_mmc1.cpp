@@ -21,7 +21,7 @@ void Mapper1_MMC1::reset()
 void Mapper1_MMC1::updateBanks()
 {
     uint8_t prgMode = (control >> 2) & 0x03;
-    uint32_t bankCount = prgROM.size() / 0x4000;
+    uint32_t bankCount = (uint32_t)prgROM.size() / 0x4000;
 
     switch (prgMode)
     {

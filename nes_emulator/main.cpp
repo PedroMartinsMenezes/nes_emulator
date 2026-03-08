@@ -49,18 +49,19 @@ int main(int argc, char** argv)
 
     std::cout << "Starting execution...\n";
 
+    // specific PC for 'nestest.nes'
     if (fs::path(rom_path).filename().string() == "nestest.nes")
     {
-        //nes.bus.cpu->nestestMode = true;
-        //return run_nestest(rom_path.c_str());
         nes.bus.cpu->PC = 0xC000;
+        nes.last_pc = 0xC66E;
     }
 
+    // @@@ remove this !
     std::ofstream log("C:/dev/nes_emulator/roms/nestest/nes_emulator.log");
+
     nes.cpu.setLogger(&log);
 
-    // Nintendulator-style execution:
-    // CPU drives timing internally.
+    // Nintendulator-style execution. CPU drives timing internally.
     while (true)
     {
         nes.cpu.ExecOp();
@@ -70,53 +71,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-//int run_nestest(const char* romPath)
-//{
-//    Bus bus;
-//    CPU6502 cpu;
-//    PPU2C02 ppu;
-//    APU2A03 apu;
-//    auto cart = std::make_shared<Cartridge>(romPath);
-//
-//    bus.connectCPU(&cpu);
-//    bus.connectPPU(&ppu);
-//    bus.connectAPU(&apu);
-//
-//    cpu.connectBus(&bus);
-//    apu.connectCPU(&cpu);
-//
-//    //cpu.setNES(NES);
-//
-//    bus.insertCartridge(cart);
-//
-//    cpu.reset();
-//    ppu.reset();
-//    apu.reset();
-//
-//    // Disable DMA & interrupts for nestest
-//    //bus.dmaActive = false;
-//
-//    // Force nestest start address
-//    cpu.PC = 0xC000;
-//
-//    std::ofstream log("nestest.log");
-//
-//    while (true)
-//    {
-//        if (cpu.instructionComplete())
-//        {
-//            cpu.logState(log, cpu.PC);
-//
-//            if (cpu.PC == 0xC66E)
-//                break;
-//        }
-//
-//        cpu.clock();
-//    }
-//
-//    log.close();
-//
-//    std::cout << "nestest finished successfully\n";
-//    return 0;
-//}

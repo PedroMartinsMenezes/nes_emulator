@@ -3,36 +3,37 @@
 #include <cstdint>
 #include <memory>
 
-#include "cpu6502.h"
-#include "ppu2c02.h"
 #include "apu2a03.h"
 #include "bus.h"
 #include "cartridge.h"
+#include "cpu6502.h"
+#include "ppu2c02.h"
 
 class NES
 {
-public:
+  public:
     NES();
     ~NES();
 
-public:
+  public:
     bool insertCartridge(const std::shared_ptr<Cartridge>& cart);
     void reset();
 
     // Main execution loop (Nintendulator style)
-    void runFrame();       // Run until one frame completes
-    void run();            // Continuous execution
+    void runFrame(); // Run until one frame completes
+    void run();      // Continuous execution
 
     // Called once per CPU cycle (from CPU::RunCycle)
     void clockCPU();
 
-public:
-    CPU6502 cpu;
-    PPU2C02 ppu;
-    APU2A03 apu;
-    Bus bus;
+  public:
+    CPU6502  cpu;
+    PPU2C02  ppu;
+    APU2A03  apu;
+    Bus      bus;
+    uint16_t last_pc = 0;
 
-private:
+  private:
     std::shared_ptr<Cartridge> cartridge;
 
     bool running = false;
