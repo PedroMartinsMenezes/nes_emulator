@@ -1358,11 +1358,9 @@ void CPU6502::logState(uint16_t pc_before)
 
     (*log) << line.str() << "\n";
 
-    //@@@ Remove this
-    if (totalCycles >= (26554 + 100))
+    if (nes->last_pc != 0 && nes->last_pc == pc_before)
     {
         log->close();
-        log = nullptr;
         exit(0);
     }
 }

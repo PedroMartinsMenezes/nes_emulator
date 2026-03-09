@@ -8,8 +8,6 @@
 
 namespace fs = std::filesystem;
 
-int run_nestest(const char* romPath);
-
 int main(int argc, char** argv)
 {
     std::cout << "+--------------+\n";
@@ -30,12 +28,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::cout << "Loading: " << fs::path(rom_path).filename().string() << "\n";
+    std::string file_name = fs::path(rom_path).filename().string();
 
-    // Create NES core
+    std::string log_name = fs::path(rom_path).stem().string() + ".log";
+
+    std::cout << "Loading: " << file_name << "\n";
+
     NES nes;
 
-    // Load cartridge
     auto cart = std::make_shared<Cartridge>(rom_path);
 
     if (!cart->isValid())
@@ -49,15 +49,14 @@ int main(int argc, char** argv)
 
     std::cout << "Starting execution...\n";
 
-    // specific PC for 'nestest.nes'
-    if (fs::path(rom_path).filename().string() == "nestest.nes")
+    // specific settings for 'nestest.nes'
+    if (file_name == "nestest.nes")
     {
         nes.bus.cpu->PC = 0xC000;
         nes.last_pc = 0xC66E;
     }
 
-    // @@@ remove this !
-    std::ofstream log("C:/dev/nes_emulator/roms/nestest/nes_emulator.log");
+    std::ofstream log(log_name);
 
     nes.cpu.setLogger(&log);
 
