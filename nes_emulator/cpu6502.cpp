@@ -176,7 +176,7 @@ void CPU6502::handleInterrupt(uint16_t vector)
 
 uint8_t CPU6502::IMP()
 {
-    fetched = A;
+    read(PC);
     return 0;
 }
 
@@ -1284,23 +1284,35 @@ void CPU6502::logState(uint16_t pc_before)
     if (log == nullptr)
         return;
 
+    // Save state
+    int      cpuDataBus   = bus->cpuDataBus;
+    int      ppuStatus    = bus->ppu->PPUSTATUS;
+    bool     nmiOccurred  = bus->ppu->nmiOccurred;
+    bool     w            = bus->ppu->w;
+    uint8_t  bufferedData = bus->ppu->bufferedData;
+    uint16_t v            = bus->ppu->v;
+    uint8_t  ppuDataBus   = bus->ppu->ppuDataBus;
+
+    // Read instruction bytes
     uint8_t op = bus->cpuRead(pc_before);
     uint8_t b1 = bus->cpuRead(pc_before + 1);
     uint8_t b2 = bus->cpuRead(pc_before + 2);
 
+    // Declaring the log line
     std::stringstream line;
     line << std::uppercase << std::hex << std::setfill('0');
 
-    // PC
+    // Instruction Address pointed by PC before execution
     line << std::setw(4) << pc_before << "  ";
 
-    // Opcode
+    // Instruction Opcode
     line << std::setw(2) << (int)op << " ";
 
+    // Instruction Addressing Mode
     auto mode = lookup[op].addrmode;
 
+    // Instruction total bytes
     int instrSize = 1;
-
     if (mode == &CPU6502::IMM || mode == &CPU6502::ZP0 || mode == &CPU6502::ZPX || mode == &CPU6502::ZPY ||
         mode == &CPU6502::REL || mode == &CPU6502::IZX || mode == &CPU6502::IZY)
     {
@@ -1311,25 +1323,23 @@ void CPU6502::logState(uint16_t pc_before)
         instrSize = 3;
     }
 
-    // Byte 1
+    // Instruction Extra Byte 1
     if (instrSize >= 2)
         line << std::setw(2) << (int)b1 << " ";
     else
         line << "   ";
 
-    // Byte 2
+    // Instruction Extra Byte 2
     if (instrSize == 3)
         line << std::setw(2) << (int)b2;
     else
         line << "  ";
 
-    // Space
-    if (lookup[op].name[0] == '*')
-        line << " ";
-    else
-        line << "  ";
+    // Spacing
+    std::string spacing = lookup[op].name[0] == '*' ? " " : "  ";
+    line << spacing;
 
-    // Mnemonic
+    // Instruction Name
     line << lookup[op].name << " ";
 
     std::string operand = getOperand(mode, op, b1, b2, pc_before);
@@ -1354,10 +1364,35 @@ void CPU6502::logState(uint16_t pc_before)
     line << "PPU:" << std::setw(3) << scanline << "," << std::setw(3) << bus->ppu->cycle << " ";
 
     // CPU cycles
-    line << "CYC:" << totalCycles;
+    line << "CYC:" << std::setw(8) << totalCycles;
 
+    // adding detailed log
+    if (nes->detailed_log)
+    {
+        line << std::uppercase << std::hex << std::setfill('0');
+        line << " CB:" << std::setw(2) << (int)cpuDataBus;
+        line << " PB:" << std::setw(2) << (int)ppuDataBus;
+        line << " VS:" << std::setw(2) << (int)ppuStatus;
+    }
+
+    // Add to log file
     (*log) << line.str() << "\n";
 
+    // Restoring state
+    bus->cpuDataBus        = cpuDataBus;
+    bus->ppu->PPUSTATUS    = ppuStatus;
+    bus->ppu->nmiOccurred  = nmiOccurred;
+    bus->ppu->w            = w;
+    bus->ppu->bufferedData = bufferedData;
+    bus->ppu->v            = v;
+    bus->ppu->ppuDataBus   = ppuDataBus;
+
+    // Check the log limits
+    if (nes->max_logs > 0 && totalCycles > nes->max_logs)
+    {
+        log->close();
+        exit(0);
+    }
     if (nes->last_pc != 0 && nes->last_pc == pc_before)
     {
         log->close();

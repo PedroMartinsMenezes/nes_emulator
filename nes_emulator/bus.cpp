@@ -67,6 +67,8 @@ uint8_t Bus::cpuRead(uint16_t addr)
 
 void Bus::cpuWrite(uint16_t addr, uint8_t data)
 {
+    cpuDataBus = data;
+
     if (cartridge && cartridge->cpuWrite(addr, data))
         return;
 

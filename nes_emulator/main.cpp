@@ -55,6 +55,10 @@ int main(int argc, char** argv)
         nes.bus.cpu->PC = 0xC000;
         nes.last_pc = 0xC66E;
     }
+    else if (file_name == "ppu_vbl_nmi.nes")
+    {
+        nes.detailed_log = true;
+    }
 
     std::ofstream log(log_name);
 

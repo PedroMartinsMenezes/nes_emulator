@@ -31,7 +31,12 @@ class NES
     PPU2C02  ppu;
     APU2A03  apu;
     Bus      bus;
+
+    // command line arguments
     uint16_t last_pc = 0;
+    int      max_logs = 1000;
+    bool     detailed_log = false;
+
 
   private:
     std::shared_ptr<Cartridge> cartridge;

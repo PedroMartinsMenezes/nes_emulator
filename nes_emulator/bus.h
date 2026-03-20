@@ -25,7 +25,6 @@ public:
 
 public:
     uint8_t cpuDataBus = 0x00;
-
     bool dmaActive = false;
     bool dmaDummy = true;
     uint8_t dmaPage = 0x00;
