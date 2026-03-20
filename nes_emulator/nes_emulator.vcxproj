@@ -124,32 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="apu2a03.cpp" />
-    <ClCompile Include="cartridge.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="bus.cpp" />
-    <ClCompile Include="cpu6502.cpp" />
-    <ClCompile Include="mapper0_nrom.cpp" />
-    <ClCompile Include="mapper1_mmc1.cpp" />
-    <ClCompile Include="nes.cpp" />
-    <ClCompile Include="ppu2c02.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="apu2a03.h" />
-    <ClInclude Include="bus.h" />
-    <ClInclude Include="cartridge.h" />
-    <ClInclude Include="cpu6502.h" />
-    <ClInclude Include="IMapper.h" />
-    <ClInclude Include="mapper0_nrom.h" />
-    <ClInclude Include="mapper1_mmc1.h" />
-    <ClInclude Include="nes.h" />
-    <ClInclude Include="ppu2c02.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\roms\nestest.nes" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\roms\nestest.log" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
