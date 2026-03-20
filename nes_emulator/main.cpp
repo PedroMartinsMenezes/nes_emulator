@@ -1,7 +1,9 @@
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <memory>
+#include "rom.h"
+#include "bus.h"
+#include "cpu.h"
 
 namespace fs = std::filesystem;
 
@@ -18,18 +20,71 @@ int main(int argc, char** argv)
     }
 
     std::string rom_path = argv[1];
-
     if (!fs::exists(rom_path))
     {
-        std::cout << "ROM file not found.\n";
+        std::cout << "ROM not found: " << rom_path << "\n";
         return 1;
     }
 
-    std::string file_name = fs::path(rom_path).filename().string();
+    // Load ROM
+    auto rom = std::make_unique<ROM>();
+    if (!rom->load(rom_path))
+        return 1;
 
-    std::string log_name = fs::path(rom_path).stem().string() + ".log";
+    // Build system
+    auto bus = std::make_unique<Bus>();
+    bus->attach_rom(rom.get());
 
-    std::cout << "Loading: " << file_name << "\n";
+    auto cpu = std::make_unique<CPU>();
+    cpu->attach_bus(bus.get());
 
-    return 0;
+    // Open log file alongside the ROM
+    std::string log_path = fs::path(rom_path).stem().string() + ".log";
+    FILE* log_file = fopen(log_path.c_str(), "w");
+    if (!log_file)
+    {
+        std::cerr << "Cannot open log: " << log_path << "\n";
+        return 1;
+    }
+    cpu->log_file = log_file;
+
+    // nestest automation: reset then override PC to $C000
+    cpu->reset();
+    cpu->set_pc(0xC000);
+
+    std::cout << "Running nestest (PC=$C000)...\n";
+
+    // Run until PC loops to itself (infinite loop = test done)
+    // or until cycle limit
+    const uint64_t MAX_CYCLES = 500'000;
+    uint16_t prev_pc = 0xFFFF;
+
+    while (cpu->cycles < MAX_CYCLES)
+    {
+        uint16_t pc = cpu->PC;
+        cpu->step();
+
+        // Detect infinite loop (JMP to self)
+        if (cpu->PC == pc)
+            break;
+    }
+
+    fclose(log_file);
+
+    // Read result codes written by nestest
+    uint8_t res_official   = bus->ram_peek(0x0002);
+    uint8_t res_unofficial = bus->ram_peek(0x0003);
+
+    std::cout << "\nResult $02 (official):   "
+              << (res_official == 0 ? "PASS" : "FAIL")
+              << " (code=" << (int)res_official << ")\n";
+
+    std::cout << "Result $03 (unofficial): "
+              << (res_unofficial == 0 ? "PASS" : "FAIL")
+              << " (code=" << (int)res_unofficial << ")\n";
+
+    std::cout << "Total cycles: " << cpu->cycles << "\n";
+    std::cout << "Log: " << log_path << "\n";
+
+    return (res_official == 0 && res_unofficial == 0) ? 0 : 1;
 }

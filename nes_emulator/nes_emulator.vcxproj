@@ -124,7 +124,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bus.cpp" />
+    <ClCompile Include="cpu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="rom.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bus.h" />
+    <ClInclude Include="cpu.h" />
+    <ClInclude Include="rom.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
