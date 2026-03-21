@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     cpu->reset();
     cpu->set_pc(0xC000);
 
-    std::cout << "Running nestest (PC=$C000)...\n";
+    std::cout << "Running nestest (PC=$C000)...\n\n";
 
     // Run until PC loops to itself (infinite loop = test done)
     // or until cycle limit
@@ -60,36 +60,51 @@ int main(int argc, char** argv)
     uint16_t prev_pc = 0xFFFF;
 
     int iterations = 0;
+    int last_pc = -1;
 
-    while (cpu->cycles < MAX_CYCLES)
+    if (fs::path(rom_path).stem().string() == "nestest")
+    {
+        last_pc = 0xC66E;
+    }
+
+    while (true)
     {
         iterations++;
         uint16_t pc = cpu->PC;
         cpu->step();
 
-        // Detect infinite loop (JMP to self)
         if (cpu->PC == pc)
+        {
+            std::cout << "Infinite loop detected at PC=$" << std::hex << pc << ". Stopping execution.\n";
             break;
+        }
+        if (pc == last_pc)
+        {            
+            std::cout << "Reached final PC=$" << std::hex << pc << ". Stopping execution.\n";
+             break;
+        }
+        if (cpu->cycles >= MAX_CYCLES)
+        {
+            std::cout << "Cycle limit reached (" << MAX_CYCLES << "). Stopping execution.\n";
+            break;
+        }
     }
 
     fclose(log_file);
 
+    std::cout << std::dec;
+
+    std::cout << "Iterations: " << iterations << "\n";    
+    std::cout << "Total cycles: " << cpu->cycles << "\n";
+    std::cout << "Log: " << log_path << "\n";
+
+    #pragma region nestest specific
     // Read result codes written by nestest
     uint8_t res_official   = bus->ram_peek(0x0002);
     uint8_t res_unofficial = bus->ram_peek(0x0003);
-
-    std::cout << "Iterations: " << iterations << "\n";
-
-    std::cout << "\nResult $02 (official):   "
-              << (res_official == 0 ? "PASS" : "FAIL")
-              << " (code=" << (int)res_official << ")\n";
-
-    std::cout << "Result $03 (unofficial): "
-              << (res_unofficial == 0 ? "PASS" : "FAIL")
-              << " (code=" << (int)res_unofficial << ")\n";
-
-    std::cout << "Total cycles: " << cpu->cycles << "\n";
-    std::cout << "Log: " << log_path << "\n";
+    std::cout << "\nResult $02 (official):   " << (res_official == 0 ? "PASS" : "FAIL") << " (code=" << (int)res_official << ")\n";
+    std::cout << "Result $03 (unofficial): " << (res_unofficial == 0 ? "PASS" : "FAIL") << " (code=" << (int)res_unofficial << ")\n";
+    #pragma endregion
 
     return (res_official == 0 && res_unofficial == 0) ? 0 : 1;
 }
