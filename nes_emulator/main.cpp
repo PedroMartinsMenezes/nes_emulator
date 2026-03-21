@@ -38,8 +38,8 @@ int main(int argc, char** argv)
     auto cpu = std::make_unique<CPU>();
     cpu->attach_bus(bus.get());
 
-    // Open log file alongside the ROM
-    std::string log_path = fs::path(rom_path).stem().string() + ".log";
+    // Open log file in the same folder as the ROM
+    std::string log_path = (fs::path(rom_path).parent_path() / (fs::path(rom_path).stem().string() + ".log")).string();
     FILE* log_file = fopen(log_path.c_str(), "w");
     if (!log_file)
     {
