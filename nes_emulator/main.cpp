@@ -59,8 +59,11 @@ int main(int argc, char** argv)
     const uint64_t MAX_CYCLES = 500'000;
     uint16_t prev_pc = 0xFFFF;
 
+    int iterations = 0;
+
     while (cpu->cycles < MAX_CYCLES)
     {
+        iterations++;
         uint16_t pc = cpu->PC;
         cpu->step();
 
@@ -74,6 +77,8 @@ int main(int argc, char** argv)
     // Read result codes written by nestest
     uint8_t res_official   = bus->ram_peek(0x0002);
     uint8_t res_unofficial = bus->ram_peek(0x0003);
+
+    std::cout << "Iterations: " << iterations << "\n";
 
     std::cout << "\nResult $02 (official):   "
               << (res_official == 0 ? "PASS" : "FAIL")
