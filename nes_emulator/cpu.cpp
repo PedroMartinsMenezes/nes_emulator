@@ -942,11 +942,15 @@ void CPU::step()
     // ---- Write log line ----
     if (log_file)
     {
+        uint64_t ppu_cycle    = log_cyc * 3;
+        int      ppu_scanline = (int)(ppu_cycle / 341) % 262;
+        int      ppu_dot      = (int)(ppu_cycle % 341);
+
         fprintf(log_file,
-            "%s  A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3i,%3i CYC:%8llu\n", // CB:%02X PB:%02X VS:%02X
+            "%s  A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3i,%3i CYC:%llu\n",
             prefix,
             log_a, log_x, log_y, log_p, log_sp,
-            0, 0,
-            (unsigned long long)log_cyc); //0, 0, 0
+            ppu_scanline, ppu_dot,
+            (unsigned long long)log_cyc);
     }
 }

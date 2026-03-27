@@ -17,5 +17,6 @@ public:
 
 private:
     std::array<uint8_t, 2048> m_ram{};
-    ROM* m_rom = nullptr;
+    ROM* m_rom   = nullptr;
+    uint8_t m_open_bus = 0;  // last byte on the data bus
 };
