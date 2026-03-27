@@ -355,6 +355,10 @@ void CPU::build_log_prefix(uint16_t pc, uint8_t op,
                             uint16_t mid_addr, uint16_t eff_addr,
                             char* out) const
 {
+    //simulating the logic of 'ReadUnsafe' function
+    int bank = (addr >> 12) & 0xF;
+    val      = (bank > 3 && strcmp(name, " STA") == 0) ? 0xFF : val;
+
     switch (mode)
     {
     case IMP:
